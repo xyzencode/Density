@@ -19,6 +19,8 @@
     "d-scrape": "^1.2.0",
     "file-type": "^19.0.0",
     "human-readable": "^0.2.1",
+    "lodash": "^4.17.21",
+    "lowdb": "^7.0.1",
     "moment-timezone": "^0.5.45",
     "node-webpmux": "^3.2.0",
     "performance-now": "^2.1.0",

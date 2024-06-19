@@ -69,4 +69,4 @@ assets/emojis/*
 # Framework XYZ
 .vscode
 session
-test
+src/test/*

@@ -1,9 +1,9 @@
-import config from "./config/index.js";
+import config from "./src/config/index.js";
 import makeWASocket, { Browsers, delay, DisconnectReason, fetchLatestWaWebVersion, jidNormalizedUser, makeCacheableSignalKeyStore, makeInMemoryStore, PHONENUMBER_MCC, useMultiFileAuthState } from "@xyzendev/baileys";
 import { Boom } from "@hapi/boom";
-import treeKill from "./lib/tree-kill.js";
+import treeKill from "./src/lib/tree-kill.js";
 import pino from "pino";
-import smsg, { Module } from "./lib/serialize.js";
+import smsg, { Module } from "./src/lib/serialize.js";
 import fs from "fs"
 import { exec } from "child_process";
 

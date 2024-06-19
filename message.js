@@ -1,23 +1,26 @@
-import config from "./config/index.js"
-import mess from "./config/mess.js"
-import { appenTextMessage } from "./lib/serialize.js";
-import * as Func from "./lib/functions.js"
+import config from "./src/config/index.js"
+import mess from "./src/config/mess.js"
+import { appenTextMessage } from "./src/lib/serialize.js";
+import * as Func from "./src/lib/functions.js"
 import os from "os"
 import util from "util"
 import chalk from "chalk"
 import { readFileSync, unwatchFile, watchFile, writeFileSync } from "fs";
+import PonyoAI, { updateSession, getSession, addSession, deleteSession } from "./src/script/ponyoai.js"
 import axios from 'axios';
 import { fileURLToPath } from "url";
 import { exec } from "child_process";
 import speed from "performance-now"
 import ytdl from 'youtubedl-core';
-import { search, ytmp3, ytmp4 } from "./resources/script/youtube.js";
-import downloadTrack from "./resources/script/spotify.js";
+import { search, ytmp3, ytmp4 } from "./src/script/youtube.js";
+import downloadTrack from "./src/script/spotify.js";
 import { performance } from "perf_hooks";
-import { GPT4 } from "./resources/script/chatgpt.js";
+import { GPT4 } from "./src/script/chatgpt.js";
 
-const antilink = JSON.parse(readFileSync('./resources/database/antilink.json'));
-const USERS = JSON.parse(readFileSync('./resources/database/users.json'));
+const antilink = JSON.parse(readFileSync('./src/storage/json/antilink.json'));
+const autoai = JSON.parse(readFileSync('./src/storage/json/autoai.json'));
+const session = JSON.parse(readFileSync("./src/storage/json/session-ponyoai.json"));
+const USERS = JSON.parse(readFileSync('./src/storage/json/users.json'));
 
 export default async function message(client, store, m, chatUpdate) {
     try {
@@ -25,16 +28,45 @@ export default async function message(client, store, m, chatUpdate) {
         let quoted = m.isQuoted ? m.quoted : m
         let Downloaded = async (fileName) => await client.downloadMediaMessage(quoted, fileName)
         let isOwner = JSON.stringify(config.number.owner).includes(m.sender.replace(/\D+/g, "")) || false
-        let isPremium = JSON.parse(readFileSync("./resources/database/premium.json")).map(v => v.replace(/[^0-9]/g, "")).includes(m.sender.replace(/\D+/g, "")) || isOwner
+        let isPremium = JSON.parse(readFileSync("./src/storage/json/premium.json")).map(v => v.replace(/[^0-9]/g, "")).includes(m.sender.replace(/\D+/g, "")) || isOwner
         let isUsers = USERS.includes(m.sender)
         let isCommand = (m.prefix && m.body.startsWith(m.prefix)) || false
         let isAntiLink = antilink.includes(m.from) && m.isGroup
+        let isAutoAI = m.from.endsWith("@s.whatsapp.net") && autoai.includes(m.from)
 
         if (isAntiLink) {
             if (m.body.includes("whatsapp.com") || m.body.includes("wa.me") || m.body.includes("chat.whatsapp")) {
                 if (m.isAdmin) return;
                 if (m.isCreator) return;
                 await client.sendMessage(m.from, { delete: quoted.key })
+            }
+        }
+
+        if (isAutoAI && !isCommand && !m.isGroup && !m.isBot) {
+            const session = await getSession(m.sender.split("@")[0]);
+            if (session && session.chat_id) {
+                await PonyoAI(m.body, session.chat_id, session.cai)
+                    .then((response) => {
+                        m.reply(response.result?.replies[0].text);
+                    })
+                    .catch((e) => {
+                        console.error(e)
+                    });
+            } else {
+                await PonyoAI(m.body)
+                    .then((response) => {
+                        const chat_id = response.result?.chat_id;
+                        if (chat_id) {
+                            addSession(m.sender.split("@")[0], chat_id);
+                            m.reply(response.result.replies[0].text);
+                        } else {
+                            m.reply(mess.error);
+                        }
+                    })
+                    .catch((e) => {
+                        console.error(e)
+                        m.reply(mess.error);
+                    });
             }
         }
 
@@ -47,7 +79,7 @@ export default async function message(client, store, m, chatUpdate) {
         if (m.message && !m.isBot) {
             if (!isUsers) {
                 USERS.push(m.sender)
-                writeFileSync('./resources/database/users.json', JSON.stringify(USERS, null, 2))
+                writeFileSync('./src/storage/json/users.json', JSON.stringify(USERS, null, 2))
             }
 
             console.log(
@@ -71,7 +103,7 @@ export default async function message(client, store, m, chatUpdate) {
             case "menu":
             case "allmenu":
             case "help": {
-                const menu = await (await import("./config/menu.js")).default
+                const menu = await (await import("./src/config/menu.js")).default
                 let txt = `Hello ${m.pushName} 👋🏻\n`;
                 Object.keys(menu).forEach((category) => {
                     txt += `\n*${category.toUpperCase()}*\n`;
@@ -104,7 +136,7 @@ export default async function message(client, store, m, chatUpdate) {
                         externalAdReply: {
                             title: "MIT License",
                             body: 'Copyright (c) 2024 Muhammad Adriansyah',
-                            thumbnail: readFileSync('./resources/image/MIT.png'),
+                            thumbnail: readFileSync('./src/storage/image/MIT.png'),
                             showAdAttribution: true,
                             renderLargerThumbnail: true,
                             mediaType: 1
@@ -210,7 +242,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                         let upload = await Func.upload.telegra(media);
                         let res = await Func.getBuffer(upload);
                         let imageData = Buffer.from(res, 'binary');
-                        let { processing } = (await import("./resources/script/upscale.js"))
+                        let { processing } = (await import("./src/script/upscale.js"))
                         let pros = await processing(imageData, 'enhance');
                         var error;
                         client.sendMessage(m.from, { image: pros, caption: mess.success }, { quoted: m });
@@ -264,7 +296,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'pinterest': {
                 if (!m.text) return client.reply(m.from, mess.media.query, m);
                 const [query, countStr] = m.text.split("|");
-                const rules = JSON.parse(readFileSync('./resources/database/pinterest.json'));
+                const rules = JSON.parse(readFileSync('./src/storage/json/pinterest.json'));
                 if (rules.some(rule => m.text.includes(rule))) return client.reply(m.from, mess.notAllow, m);
                 let count = countStr ? parseInt(countStr) : 1;
                 if (!query) return client.reply(m.from, mess.media.query, m);
@@ -293,10 +325,10 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'addrulespin':
             case 'addpinrule': {
                 if (!m.text) return client.reply(m.from, 'Enter Rules', m)
-                const rules = JSON.parse(readFileSync('./resources/database/pinterest.json'))
+                const rules = JSON.parse(readFileSync('./src/storage/json/pinterest.json'))
                 if (rules.includes(m.text)) return client.reply(m.from, 'Rules already exist', m);
                 rules.push(m.text)
-                writeFileSync('./resources/database/pinterest.json', JSON.stringify(rules))
+                writeFileSync('./src/storage/json/pinterest.json', JSON.stringify(rules))
                 client.reply(m.from, 'Rules Added', m)
             }
                 break
@@ -304,10 +336,10 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'delrulespin':
             case 'delpinrule': {
                 if (!m.text) return client.reply(m.from, 'Enter Rules', m)
-                const rules = JSON.parse(readFileSync('./resources/database/pinterest.json'))
+                const rules = JSON.parse(readFileSync('./src/storage/json/pinterest.json'))
                 if (!rules.includes(m.text)) return client.reply(m.from, 'There are no rules', m);
                 rules.splice(rules.indexOf(m.text), 1)
-                writeFileSync('./resources/database/pinterest.json', JSON.stringify(rules))
+                writeFileSync('./src/storage/json/pinterest.json', JSON.stringify(rules))
                 client.reply(m.from, 'Rules Removed', m)
             }
                 break
@@ -421,12 +453,12 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 if (m.text === "on") {
                     if (antilink.includes(m.from)) return client.reply(m.from, "Anti-link has been activated in this group.", m);
                     antilink.push(m.from);
-                    writeFileSync("./resources/database/antilink.json", JSON.stringify(antilink));
+                    writeFileSync("./src/storage/json/antilink.json", JSON.stringify(antilink));
                     client.reply(m.from, "Successfully activated anti-link in this group.", m);
                 } else if (m.text === "off") {
                     if (!antilink.includes(m.from)) return m.reply("Anti-link has been disabled in this group.");
                     antilink.splice(antilink.indexOf(m.from), 1);
-                    writeFileSync("./resources/database/antilink.json", JSON.stringify(antilink));
+                    writeFileSync("./src/storage/json/antilink.json", JSON.stringify(antilink));
                     client.reply(m.from, "Successfully deactivated anti-link in this group.", m);
                 }
             }
@@ -541,7 +573,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
 
                 const url = `https://skizo.tech/api/qc?${new URLSearchParams(params).toString()}`;
                 let api = await Func.fetchBuffer(url);
-                let sticker = await (await import("./lib/sticker.js")).writeExif(api, { packName: config.settings.packName, packPublish: config.settings.packPublish })
+                let sticker = await (await import("./src/lib/sticker.js")).writeExif(api, { packName: config.settings.packName, packPublish: config.settings.packPublish })
                 await m.reply({ sticker });
             }
                 break;
@@ -549,7 +581,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'attp': {
                 if (!m.text) return client.reply(m.from, 'Please enter the text.', m)
                 const buffer = await Func.fetchBuffer(`https://aemt.me/${m.command}?text=${encodeURIComponent(m.text)}`)
-                let sticker = await (await import("./lib/sticker.js")).writeExif(buffer, { packName: config.settings.packName, packPublish: config.settings.packPublish })
+                let sticker = await (await import("./src/lib/sticker.js")).writeExif(buffer, { packName: config.settings.packName, packPublish: config.settings.packPublish })
                 await m.reply({ sticker });
             }
                 break
@@ -565,28 +597,105 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 } else {
                     exif = { packName: config.settings.packName, packPublish: config.settings.packPublish };
                 }
-                let sticker = await (await import('./lib/sticker.js')).writeExif({ mimetype: quoted.msg.mimetype, data: media }, exif);
+                let sticker = await (await import('./src/lib/sticker.js')).writeExif({ mimetype: quoted.msg.mimetype, data: media }, exif);
                 await m.reply({ sticker });
             }
                 break
             case 'getcase':
-                if (!m.isCreator) return client.reply(m.from, mess.owner, m)
+                if (!isOwner) return client.reply(m.from, mess.owner, m)
                 if (!m.text) return client.reply(m.from, 'Please enter the case', m)
-                await client.reply(m.from, Func.getCase(q), m)
+                await client.reply(m.from, Func.getCase(m.text), m)
                 break
 
             case 'listonline':
             case 'here': {
                 if (!m.isGroup) return client.reply(m.from, mess.group, m)
                 if (!m.isAdmin) return client.reply(m.from, mess.admin, m)
-                let id = args && /\d+\-\d+@g.us/.test(m.args[0]) ? m.args[0] : m.from
+                let id = m.args && /\d+\-\d+@g.us/.test(m.args[0]) ? m.args[0] : m.from
                 let online = [...Object.keys(store.presences[id]), m.botNumber]
                 let liston = 1
                 let txt = `*List Online Members*\n\n`
                 for (let user of online) {
-                    txt += `${liston++}. @${user.replace(/@.+/, '')}\n`
+                    txt += `${liston++}. ${user.replace(/@.+/, '')}\n`
                 }
-                await client.reply(m.from, txt, m, { mentions: online })
+                await client.reply(m.from, txt, m)
+            }
+                break
+            case 'autoai': {
+                if (!m.text) return client.reply(m.from, "Please enter the command on on off", m)
+                if (m.isGroup) return client.reply(m.from, "This command only works in private chat", m)
+                if (m.text === "on") {
+                    if (autoai.includes(m.from)) return client.reply(m.from, "Auto AI has been activated", m)
+                    autoai.push(m.from)
+                    writeFileSync('./src/storage/json/autoai.json', JSON.stringify(autoai, null, 2))
+                    client.reply(m.from, "Auto AI has been activated", m)
+                } else if (m.text === "off") {
+                    if (!autoai.includes(m.from)) return client.reply(m.from, "Auto AI has been deactivated", m)
+                    autoai.splice(autoai.indexOf(m.from), 1)
+                    writeFileSync('./src/storage/json/autoai.json', JSON.stringify(autoai, null, 2))
+                    client.reply(m.from, "Auto AI has been deactivated", m)
+                }
+            }
+                break
+            case 'resetsessionai':
+            case 'resetai': {
+                if (getSession(m.sender.split("@")[0])) {
+                    await deleteSession(m.sender.split("@")[0])
+                    await client.reply(m.from, "Session AI has been reset", m)
+                } else client.reply(m.from, "Session AI not found", m)
+            }
+                break
+            case 'setaifunc':
+            case 'setsessionaifunc': {
+                if (!m.text) return client.reply(m.from, "Please enter the session id", m)
+                const data = getSession(m.sender.split("@")[0])
+                const { result } = await Func.fetchJson(`https://api.apigratis.site/cai/character_info?external_id=${m.text}`);
+                if (result.length === 0) return client.reply(m.from, "Character not found", m)
+                const { character } = result
+                client.sendMessage(m.from, {
+                    text: character.title,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: character.title === "" ? "Powered By Adrian" : character.title,
+                            body: character.greeting,
+                            thumbnailUrl: character.avatar_file_name,
+                            showAdAttribution: true,
+                            renderLargerThumbnail: true,
+                            mediaType: 1
+                        }
+                    }
+                }, { quoted: m });
+                if (data) {
+                    await updateSession(m.sender.split("@")[0], {
+                        users: m.sender.split("@")[0],
+                        chat_id: data.chat_id,
+                        cai: m.text
+                    }).then(() => {
+                        client.reply(m.from, "Session AI has been updated", m)
+                    }).catch(() => {
+                        client.reply(m.from, "Failed to update session AI", m)
+                    })
+                } else client.reply(m.from, "Session AI not found", m)
+            }
+                break
+            case 'setai':
+            case 'setsessionai': {
+                if (!m.text) return client.reply(m.from, "Please send the name characters", m)
+                const { result } = await Func.fetchJson(`https://api.apigratis.site/cai/search_characters?query=${m.text}`);
+                const { characters } = result
+                if (characters.length === 0) return client.reply(m.from, "Character not found", m)
+                await client.sendList(m.from, "The Result", "Powered By Adrian", {
+                    title: 'Click Me :)',
+                    sections: [{
+                        title: `Result for ${m.text.toUpperCase()}`,
+                        highlight_label: "Best Result",
+                        rows: characters.map(a => ({
+                            title: a.title === null ? m.text.toUpperCase() : a.title,
+                            description: a.description === null ? 'No Description' : a.description,
+                            id: '.setsessionaifunc ' + a.external_id
+                        }))
+                    }]
+                })
             }
                 break
             default:
