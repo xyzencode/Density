@@ -1,3 +1,5 @@
+// Created By Muhammad Adriansyah - Zayden
+
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import ytdl from 'youtubedl-core';
@@ -10,11 +12,16 @@ export async function ytmp3(client, m, url) {
         let b = await ytdl(url, {
             filter: "audioonly"
         }).pipe(fs.createWriteStream(a)).on("finish", async () => {
-            await client.sendMessage(m.from, {
-                audio: fs.readFileSync(a),
-                mimetype: "audio/mp4",
-                ptt: false
-            }, { quoted: m, sendEphemeral: true })
+            const stats = fs.statSync(a);
+            const fileSizeInBytes = stats.size;
+            const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+            if (fileSizeInMB < 50) {
+                await client.sendMessage(m.from, {
+                    audio: fs.readFileSync(a),
+                    mimetype: "audio/mp4",
+                    ptt: false
+                }, { quoted: m, sendEphemeral: true })
+            } else await client.sendMessage(m.from, { text: "File size exceeds 50MB limit." }, { quoted: m, sendEphemeral: true });
         })
         return b
     } catch (e) {

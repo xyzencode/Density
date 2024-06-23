@@ -4,6 +4,7 @@ import mimes from "mime-types";
 import { fileTypeFromBuffer } from "file-type";
 import { sizeFormatter } from 'human-readable';
 import { toBuffer } from "@xyzendev/baileys";
+import { readFileSync } from 'fs';
 
 export function makeid(length) {
     let result = "";
@@ -17,7 +18,7 @@ export function makeid(length) {
 };
 
 export const getCase = (cases) => {
-    return "case" + `'${cases}'` + fs.readFileSync("./message.js").toString().split('case \'' + cases + '\'')[1].split("break")[0] + "break"
+    return "case" + `'${cases}'` + readFileSync("./message.js").toString().split('case \'' + cases + '\'')[1].split("break")[0] + "break"
 }
 export function toLower(text, style = 1) {
     var xStr = 'abcdefghijklmnopqrstuvwxyz1234567890'.split('');

@@ -2,9 +2,7 @@ import { fileURLToPath } from "url";
 import { watchFile, unwatchFile } from "fs";
 
 export default {
-    lol: "Anastasya",
-    skizo: "Anastasya",
-    azure: "2e6532692d764b48b5454f0f4abf8c81"
+    skizo: process.env.API_KEY_SKIZO
 }
 
 let fileP = fileURLToPath(import.meta.url);

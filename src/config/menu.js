@@ -49,8 +49,6 @@ export default {
         'openai',
         'remini',
         'hdr',
-        'dalle3',
-        'imagetoprompt',
         'whatmusic'
     ],
     function: [

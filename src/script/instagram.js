@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export async function igdl(url) {
+export default async function igdl(url) {
     try {
         const response = await axios.request({
             method: "GET",

@@ -13,9 +13,12 @@ import { exec } from "child_process";
 import speed from "performance-now"
 import ytdl from 'youtubedl-core';
 import { search, ytmp3, ytmp4 } from "./src/script/youtube.js";
-import downloadTrack from "./src/script/spotify.js";
+import downloadTrack, { searchSpoti } from "./src/script/spotify.js";
 import { performance } from "perf_hooks";
 import { GPT4 } from "./src/script/chatgpt.js";
+import igdl from "./src/script/instagram.js"
+import baileys from "@xyzendev/baileys";
+import dScrape from "d-scrape";
 
 const antilink = JSON.parse(readFileSync('./src/storage/json/antilink.json'));
 const autoai = JSON.parse(readFileSync('./src/storage/json/autoai.json'));
@@ -120,7 +123,7 @@ export default async function message(client, store, m, chatUpdate) {
             case 'thanksto':
             case 'thankto':
             case 'terimakasihkepada': {
-                const api = ['https://skizo.tech', 'https://api.lolhuman.xyz', 'https://aemt.me']
+                const api = ["Muhammad Adriansyah", "Zayden"]
                 let txt = "*Terima Kasih Kepada:*\n\n";
                 api.map(v => txt += `- ${v}\n`);
                 client.reply(m.from, txt, m);
@@ -146,7 +149,9 @@ export default async function message(client, store, m, chatUpdate) {
             }
 
                 break
-            case 'ping': case 'botstatus': case 'statusbot': {
+            case 'ping':
+            case 'botstatus':
+            case 'statusbot': {
                 const used = process.memoryUsage()
                 const cpus = os.cpus().map(cpu => {
                     cpu.total = Object.keys(cpu.times).reduce((last, type) => last + cpu.times[type], 0)
@@ -260,25 +265,6 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 }
             }
                 break
-            case 'dalle3':
-            case 'dall-e3':
-            case 'dalle':
-            case 'dall-e': {
-                if (!m.text) return client.reply(m.from, mess.media.prompt, m);
-                const { url } = await Func.fetchJson(`https://skizo.tech/api/dalle3?apikey=${config.api.skizo}&prompt=${m.text}`)
-                await client.sendImage(m.from, url, m.text, m)
-            }
-                break
-            case 'imagetoprompt':
-            case 'imgtoprompt': {
-                if (!quoted.isMedia) return client.reply(m.from, mess.media.image, m);
-                const media = await Downloaded();
-                const post = await Func.upload.pomf(media);
-                const res = await Func.fetchJson(`https://skizo.tech/api/imagetoprompt?apikey=${config.api.skizo}&url=${post}`);
-                if (!res.prompt) return client.reply(m.from, mess.error, m);
-                client.reply(m.from, res.prompt, m)
-            }
-                break
             case 'whatmusic': {
                 if (!quoted.isMedia) return client.reply(m.from, mess.media.audio, m);
                 const media = await Downloaded();
@@ -303,12 +289,12 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 if (count > 10) return client.reply(m.from, 'Max 5', m);
 
                 try {
-                    const res = await Func.fetchJson(`https://skizo.tech/api/pinterest?apikey=${config.api.skizo}&search=${query}`);
-                    if (!res.data || res.data.length === 0) return client.reply(m.from, mess.notfound, m);
+                    const res = await Func.fetchJson(`https://api.xyzen.tech/api/search/pinterest?query=${query}`);
+                    if (!res.result || res.result.length === 0) return client.reply(m.from, mess.notfound, m);
                     const jmlh = []
                     for (let i = 0; i < count; i++) {
-                        const pick = Func.pickRandom(res.data)
-                        jmlh.push(pick.media.url)
+                        const pick = Func.pickRandom(res.result)
+                        jmlh.push(pick)
                     }
                     if (jmlh.length === 1) {
                         await client.sendImage(m.from, jmlh[0], query, m)
@@ -349,15 +335,54 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'instagram':
             case 'ig': {
                 if (!m.text) return client.reply(m.from, mess.media.url, m)
-                const res = await Func.fetchJson(`https://skizo.tech/api/ig?apikey=${config.api.skizo}&url=${m.text}`);
+                if (!/instagram.com/.test(m.text)) return client.reply(m.from, 'Invalid URL', m)
+                const res = await igdl(m.text).catch(console.error)
                 if (res.length === 0) return client.reply(m.from, 'Instagram Tidak Ditemukan', m)
                 for (let i = 0; i < res.length; i++) {
-                    if (res[i].url.includes("d.rapidcdn.app")) {
-                        await client.sendVideo(m.from, res[i].url, '', m)
+                    if (res[i].includes("https://scontent.cdninstagram.com")) {
+                        await client.sendImage(m.from, res[i], '', m)
                     } else {
-                        await client.sendImage(m.from, res[i].url, '', m)
+                        await client.sendVideo(m.from, res[i], '', m)
                     }
                 }
+            }
+                break
+            case 'igstory':
+            case 'igstalker': {
+                if (!m.text) return client.reply(m.from, 'Send Nickname Instagram', m)
+                if (!/instagram.com/.test(m.text)) return client.reply(m.from, 'Invalid URL', m)
+                await dScrape.downloader.igStory('https://www.instagram.com/stories/' + m.text).then(async (res) => {
+                    for (let i = 0; i < res.length; i++) {
+                        if (res[i].url.includes("https://scontent.cdninstagram.com")) {
+                            await client.sendImage(m.from, res[i].url, '', m)
+                        } else {
+                            await client.sendVideo(m.from, res[i].url, '', m)
+                        }
+                    }
+                }).catch((err) => {
+                    console.log(err);
+                    client.reply(m.from, 'Nickname Tidak Ada', m)
+                });
+            }
+                break
+            case 'mediafire':
+            case 'mf': {
+                if (!m.text) return client.reply(m.from, mess.media.url, m);
+                if (/mediafire.com/.test(m.text)) return client.reply(m.from, 'Invalid URL', m);
+                const res = await dScrape.downloader.mediafire(m.text);
+                const size = 0
+                if (res.size.includes('GB')) return size = parseInt(res.size) * 1024
+                if (res.size.includes('MB')) return size = parseInt(res.size)
+
+                if (size > 100) return client.reply(m.from, 'File too large', m)
+                await client.sendMessage(m.from, {
+                    document: {
+                        url: res.url,
+                        mimetype: "application/" + res.title.split('.').pop(),
+                        filename: res.title,
+                        caption: `*Title:* ${res.title}\n*Size:* ${res.size}\n*Download:* ${res.url}`
+                    }
+                })
             }
                 break
 
@@ -373,9 +398,9 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'tt': {
                 if (!m.text) return client.reply(m.from, mess.media.url, m);
                 if (!m.text.includes('tiktok.com')) return client.reply(m.from, 'Invalid Tiktok URL', m)
-                const { data } = await (await Func.fetchJson(`https://skizo.tech/api/tiktok?apikey=${config.api.skizo}&url=${m.text}`))
-                if (!data.play) return client.reply(m.from, 'Video Not Found', m);
-                await client.sendMessage(m.from, { video: { url: data.play }, caption: data.title }, { quoted: m });
+                const { title, nowm } = await dScrape.downloader.tiktok(m.text)
+                if (!nowm) return client.reply(m.from, 'Video Not Found', m);
+                await client.sendMessage(m.from, { video: { url: nowm }, caption: title }, { quoted: m });
             }
                 break;
 
@@ -383,18 +408,30 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'tiktokmusic': {
                 if (!m.text) return client.reply(m.from, mess.media.url, m);
                 if (!m.text.includes('tiktok.com')) return client.reply(m.from, 'Invalid Tiktok URL', m)
-                const { data } = await (await Func.fetchJson(`https://skizo.tech/api/tiktok?apikey=${config.api.skizo}&url=${m.text}`))
-                if (!data.music) return client.reply(m.from, 'Music Not Found', m);
-                await client.sendMessage(m.from, { audio: { url: data.music }, mimeType: 'audio/mp4' }, { quoted: m });
+                const { audio } = await dScrape.downloader.tiktok(m.text)
+                if (!audio) return client.reply(m.from, 'Music Not Found', m);
+                await client.sendMessage(m.from, { audio: { url: audio }, mimeType: 'audio/mp4' }, { quoted: m });
             }
                 break
 
             // Spotify Command
             case "spotify": {
                 if (!m.text) return client.reply(m.from, mess.media.query, m)
-                let res = await Func.fetchJson(`https://api.lolhuman.xyz/api/spotifysearch?apikey=${config.api.lol}&query=${m.text}`)
+                let res = await searchSpoti(m.text)
                 if (res.length === 0) return client.reply(m.from, 'Not Found', m)
-                await client.sendList(m.from, 'Spotify Search', 'Powered By Adrian', { title: 'Click Me :)', sections: [{ title: 'Result', highlight_label: "Best Result", rows: res.result.map(a => ({ title: a.title.toUpperCase(), description: a.artists.toUpperCase(), id: '.spotifydl ' + a.link })) }] })
+                await client.sendList(m.from, 'Spotify Search', 'Powered By Adrian', {
+                    title: 'Click Me :)',
+                    sections: [
+                        {
+                            title: 'Result',
+                            highlight_label: "Best Result",
+                            rows: res.map(a => ({
+                                title: a.name.toUpperCase(),
+                                description: a.artist.toUpperCase(),
+                                id: '.spotifydl ' + a.url
+                            }))
+                        }]
+                })
             }
                 break
 
@@ -508,7 +545,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
 
             case "rvo":
             case 'readviewonce': {
-                if (!quoted.msg.viewOnce) return client.reply(m.from, 'Reply to a message with .rvo true', m)
+                if (!quoted.msg.viewOnce) return client.reply(m.from, 'Reply to a message with .rvo', m)
                 quoted.msg.viewOnce = false
                 await m.reply({ forward: quoted, force: true })
             }
@@ -619,83 +656,6 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                     txt += `${liston++}. ${user.replace(/@.+/, '')}\n`
                 }
                 await client.reply(m.from, txt, m)
-            }
-                break
-            case 'autoai': {
-                if (!m.text) return client.reply(m.from, "Please enter the command on on off", m)
-                if (m.isGroup) return client.reply(m.from, "This command only works in private chat", m)
-                if (m.text === "on") {
-                    if (autoai.includes(m.from)) return client.reply(m.from, "Auto AI has been activated", m)
-                    autoai.push(m.from)
-                    writeFileSync('./src/storage/json/autoai.json', JSON.stringify(autoai, null, 2))
-                    client.reply(m.from, "Auto AI has been activated", m)
-                } else if (m.text === "off") {
-                    if (!autoai.includes(m.from)) return client.reply(m.from, "Auto AI has been deactivated", m)
-                    autoai.splice(autoai.indexOf(m.from), 1)
-                    writeFileSync('./src/storage/json/autoai.json', JSON.stringify(autoai, null, 2))
-                    client.reply(m.from, "Auto AI has been deactivated", m)
-                }
-            }
-                break
-            case 'resetsessionai':
-            case 'resetai': {
-                if (getSession(m.sender.split("@")[0])) {
-                    await deleteSession(m.sender.split("@")[0])
-                    await client.reply(m.from, "Session AI has been reset", m)
-                } else client.reply(m.from, "Session AI not found", m)
-            }
-                break
-            case 'setaifunc':
-            case 'setsessionaifunc': {
-                if (!m.text) return client.reply(m.from, "Please enter the session id", m)
-                const data = getSession(m.sender.split("@")[0])
-                const { result } = await Func.fetchJson(`https://api.apigratis.site/cai/character_info?external_id=${m.text}`);
-                if (result.length === 0) return client.reply(m.from, "Character not found", m)
-                const { character } = result
-                client.sendMessage(m.from, {
-                    text: character.title,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: character.title === "" ? "Powered By Adrian" : character.title,
-                            body: character.greeting,
-                            thumbnailUrl: character.avatar_file_name,
-                            showAdAttribution: true,
-                            renderLargerThumbnail: true,
-                            mediaType: 1
-                        }
-                    }
-                }, { quoted: m });
-                if (data) {
-                    await updateSession(m.sender.split("@")[0], {
-                        users: m.sender.split("@")[0],
-                        chat_id: data.chat_id,
-                        cai: m.text
-                    }).then(() => {
-                        client.reply(m.from, "Session AI has been updated", m)
-                    }).catch(() => {
-                        client.reply(m.from, "Failed to update session AI", m)
-                    })
-                } else client.reply(m.from, "Session AI not found", m)
-            }
-                break
-            case 'setai':
-            case 'setsessionai': {
-                if (!m.text) return client.reply(m.from, "Please send the name characters", m)
-                const { result } = await Func.fetchJson(`https://api.apigratis.site/cai/search_characters?query=${m.text}`);
-                const { characters } = result
-                if (characters.length === 0) return client.reply(m.from, "Character not found", m)
-                await client.sendList(m.from, "The Result", "Powered By Adrian", {
-                    title: 'Click Me :)',
-                    sections: [{
-                        title: `Result for ${m.text.toUpperCase()}`,
-                        highlight_label: "Best Result",
-                        rows: characters.map(a => ({
-                            title: a.title === null ? m.text.toUpperCase() : a.title,
-                            description: a.description === null ? 'No Description' : a.description,
-                            id: '.setsessionaifunc ' + a.external_id
-                        }))
-                    }]
-                })
             }
                 break
             default:
