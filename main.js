@@ -12,6 +12,7 @@ import { Boom } from "@hapi/boom";
 import treeKill from "./src/lib/tree-kill.js";
 import pino from "pino";
 import smsg, { Module } from "./src/lib/serialize.js";
+import message from "./message.js"
 import fs from "fs"
 import { exec } from "child_process";
 
@@ -209,7 +210,7 @@ const Connecting = async () => {
             await client.readMessages([m.key])
         }
 
-        await ((await import(`./message.js?v=${Date.now()}`)).default(client, store, m, messages[0]))
+        await message(client, store, m, messages[0])
     });
 
     setInterval(async () => {

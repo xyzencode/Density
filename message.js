@@ -329,7 +329,6 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'igstory':
             case 'igstalker': {
                 if (!m.text) return client.reply(m.from, 'Send Nickname Instagram', m)
-                if (!/instagram.com/.test(m.text)) return client.reply(m.from, 'Invalid URL', m)
                 await dScrape.downloader.igStory('https://www.instagram.com/stories/' + m.text).then(async (res) => {
                     for (let i = 0; i < res.length; i++) {
                         if (res[i].url.includes("https://scontent.cdninstagram.com")) {

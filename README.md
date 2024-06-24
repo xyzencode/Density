@@ -4,9 +4,6 @@
 This is a WhatsApp bot script created by me and my friends, and friends who have helped create this script. I created this with the aim of learning Javascript and studying frameworks and libraries from the NPM and GitHub sites themselves,
 
 ## Installation
-
-Install ZaydenBot 
-
 ```bash
 apt update && apt upgrade -y
 apt install git ffmpeg curl -y 
