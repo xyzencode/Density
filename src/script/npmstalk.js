@@ -1,3 +1,5 @@
+// Copas Dari Teams 
+
 import axios from 'axios'
 
 export async function npmstalk(packageName) {

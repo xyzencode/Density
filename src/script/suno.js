@@ -1,3 +1,12 @@
+/** 
+ *  Created By Muhammad Adriansyah
+ *  CopyRight 2024 MIT License
+ *  My Github : https://github.com/xyzencode
+ *  My Instagram : https://instagram.com/xyzencode
+ *  My Youtube : https://youtube.com/@xyzencode
+*/
+
+import "dotenv/config.js";
 import Replicate from "replicate";
 
 const replicate = new Replicate({

@@ -1,3 +1,12 @@
+/** 
+ *  Created By DikaArdnt
+ *  Modified By Muhammad Adriansyah
+ *  CopyRight 2024 MIT License
+ *  My Github : https://github.com/xyzencode
+ *  My Instagram : https://instagram.com/xyzencode
+ *  My Youtube : https://youtube.com/@xyzencode
+*/
+
 import { areJidsSameUser, downloadContentFromMessage, downloadMediaMessage, extractMessageContent, generateWAMessage, generateWAMessageContent, jidDecode, jidNormalizedUser, prepareWAMessageMedia } from "@xyzendev/baileys";
 import { parsePhoneNumber } from "libphonenumber-js"
 import baileys from "@xyzendev/baileys";

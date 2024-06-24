@@ -1,9 +1,4 @@
-/** 
- * 
- *  Scapers Created By Muhammad Adriansyah
- *  https://github.com/xyzendev
- *  
-*/
+// Copasss Dari Temen
 
 import axios from "axios";
 import FormData from "form-data";

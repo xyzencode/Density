@@ -1,3 +1,11 @@
+/** 
+ *  Created By Muhammad Adriansyah
+ *  CopyRight 2024 MIT License
+ *  My Github : https://github.com/xyzencode
+ *  My Instagram : https://instagram.com/xyzencode
+ *  My Youtube : https://youtube.com/@xyzencode
+*/
+
 import axios from "axios";
 import cheerio from "cheerio";
 

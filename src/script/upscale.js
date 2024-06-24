@@ -1,3 +1,4 @@
+// Copas + Modif Sama Gw
 import FormData from "form-data";
 
 export async function processing(urlPath, method) {

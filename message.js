@@ -1,3 +1,12 @@
+/** 
+ *  Created By Muhammad Adriansyah
+ *  CopyRight 2024 MIT License
+ *  My Github : https://github.com/xyzencode
+ *  My Instagram : https://instagram.com/xyzencode
+ *  My Youtube : https://youtube.com/@xyzencode
+*/
+
+import baileys from "@xyzendev/baileys";
 import config from "./src/config/index.js"
 import mess from "./src/config/mess.js"
 import { appenTextMessage } from "./src/lib/serialize.js";
@@ -6,7 +15,6 @@ import os from "os"
 import util from "util"
 import chalk from "chalk"
 import { readFileSync, unwatchFile, watchFile, writeFileSync } from "fs";
-import PonyoAI, { updateSession, getSession, addSession, deleteSession } from "./src/script/ponyoai.js"
 import axios from 'axios';
 import { fileURLToPath } from "url";
 import { exec } from "child_process";
@@ -17,12 +25,10 @@ import downloadTrack, { searchSpoti } from "./src/script/spotify.js";
 import { performance } from "perf_hooks";
 import { GPT4 } from "./src/script/chatgpt.js";
 import igdl from "./src/script/instagram.js"
-import baileys from "@xyzendev/baileys";
 import dScrape from "d-scrape";
 
 const antilink = JSON.parse(readFileSync('./src/storage/json/antilink.json'));
 const autoai = JSON.parse(readFileSync('./src/storage/json/autoai.json'));
-const session = JSON.parse(readFileSync("./src/storage/json/session-ponyoai.json"));
 const USERS = JSON.parse(readFileSync('./src/storage/json/users.json'));
 
 export default async function message(client, store, m, chatUpdate) {
@@ -45,33 +51,6 @@ export default async function message(client, store, m, chatUpdate) {
             }
         }
 
-        if (isAutoAI && !isCommand && !m.isGroup && !m.isBot) {
-            const session = await getSession(m.sender.split("@")[0]);
-            if (session && session.chat_id) {
-                await PonyoAI(m.body, session.chat_id, session.cai)
-                    .then((response) => {
-                        m.reply(response.result?.replies[0].text);
-                    })
-                    .catch((e) => {
-                        console.error(e)
-                    });
-            } else {
-                await PonyoAI(m.body)
-                    .then((response) => {
-                        const chat_id = response.result?.chat_id;
-                        if (chat_id) {
-                            addSession(m.sender.split("@")[0], chat_id);
-                            m.reply(response.result.replies[0].text);
-                        } else {
-                            m.reply(mess.error);
-                        }
-                    })
-                    .catch((e) => {
-                        console.error(e)
-                        m.reply(mess.error);
-                    });
-            }
-        }
 
         if (m.isBot) return;
 
