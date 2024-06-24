@@ -9,66 +9,73 @@
 import axios from "axios";
 import cheerio from "cheerio";
 
-export async function LoginSaweria(email, password) {
-    try {
-        const res = await axios("https://backend.saweria.co/auth/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            data: JSON.stringify({ email, password })
-        });
 
-        const { data } = res.data;
-        if (!data) return "Invalid email or password";
-        return data;
-    } catch (e) {
-        console.error(e);
+export default class Saweria {
+    constructor(email, password) {
+        this.email = email;
+        this.password = password;
     }
-}
 
-export async function createPayment(amount, message = "Order") {
-    try {
-        const res = await axios("https://backend.saweria.co/donations/83ca4194-6e3c-4c87-bf38-2cc0e0489bf0", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            data: JSON.stringify({
-                agree: true,
-                amount: Number(amount),
-                customer_info: {
-                    first_name: `xyzen-${Date.now()}`,
-                    email: 'owner@xyzen.tech',
-                    phone: '',
+    async login() {
+        try {
+            const res = await axios("https://backend.saweria.co/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
                 },
-                message,
-                notUnderAge: true,
-                payment_type: 'qris',
-                vote: ''
-            })
-        })
+                data: JSON.stringify({ email: this.email, password: this.password })
+            });
 
-        return res.data;
-    } catch (e) {
-        console.error(e);
+            const { data } = res.data;
+            if (!data) return "Invalid email or password";
+            return data;
+        } catch (e) {
+            console.error(e);
+        }
     }
-}
 
-export async function checkPaymentStatus(id) {
-    try {
-        const res = await axios(`https://saweria.co/receipt/${id}`, {
-            method: "GET",
-            headers: {
-                "Accept": "*/*"
-            }
-        });
+    async createPayment(amount, message = "Order") {
+        try {
+            const res = await axios("https://backend.saweria.co/donations/83ca4194-6e3c-4c87-bf38-2cc0e0489bf0", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify({
+                    agree: true,
+                    amount: Number(amount),
+                    customer_info: {
+                        first_name: `xyzen-${Date.now()}`,
+                        email: 'owner@xyzen.tech',
+                        phone: '',
+                    },
+                    message,
+                    notUnderAge: true,
+                    payment_type: 'qris',
+                    vote: ''
+                })
+            })
+            return res.data;
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
-        const $ = cheerio.load(res.data);
-        const msg = $('h2.chakra-heading.css-14dtuui').text();
-        if (!msg) return "Unknown";
-        return msg
-    } catch (e) {
-        console.error(e);
+    async checkPaymentStatus(id) {
+        try {
+            const res = await axios(`https://saweria.co/receipt/${id}`, {
+                method: "GET",
+                headers: {
+                    "Accept": "*/*"
+                }
+            });
+
+            const $ = cheerio.load(res.data);
+            const msg = $('h2.chakra-heading.css-14dtuui').text();
+            if (!msg) return "Unknown";
+            return msg
+        } catch (e) {
+            console.error(e);
+        }
     }
 }
