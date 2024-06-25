@@ -25,7 +25,9 @@ import downloadTrack, { searchSpoti } from "./src/script/spotify.js";
 import { performance } from "perf_hooks";
 import { GPT4 } from "./src/script/chatgpt.js";
 import igdl from "./src/script/instagram.js"
+import { tiktokdl } from "./src/script/tiktok.js";
 import dScrape from "d-scrape";
+import quote from "./src/script/quote.js";
 
 const antilink = JSON.parse(readFileSync('./src/storage/json/antilink.json'));
 const autoai = JSON.parse(readFileSync('./src/storage/json/autoai.json'));
@@ -330,6 +332,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'igstalker': {
                 if (!m.text) return client.reply(m.from, 'Send Nickname Instagram', m)
                 await dScrape.downloader.igStory('https://www.instagram.com/stories/' + m.text).then(async (res) => {
+                    if (res.length === 0) return client.reply(m.from, 'Nickname Tidak Ada', m)
                     for (let i = 0; i < res.length; i++) {
                         if (res[i].url.includes("https://scontent.cdninstagram.com")) {
                             await client.sendImage(m.from, res[i].url, '', m)
@@ -376,9 +379,9 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'tt': {
                 if (!m.text) return client.reply(m.from, mess.media.url, m);
                 if (!m.text.includes('tiktok.com')) return client.reply(m.from, 'Invalid Tiktok URL', m)
-                const { title, nowm } = await dScrape.downloader.tiktok(m.text)
-                if (!nowm) return client.reply(m.from, 'Video Not Found', m);
-                await client.sendMessage(m.from, { video: { url: nowm }, caption: title }, { quoted: m });
+                const res = await tiktokdl(m.text)
+                if (res.status === false) return client.reply(m.from, 'Video Not Found', m);
+                await client.sendMessage(m.from, { video: { url: res.server1.url }, caption: res.caption }, { quoted: m });
             }
                 break;
 
@@ -564,31 +567,9 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case "qc":
             case "fakechat": {
                 const avatar = await client.profilePictureUrl(m.sender, 'image').catch(() => 'https://i.pinimg.com/564x/8a/e9/e9/8ae9e92fa4e69967aa61bf2bda967b7b.jpg');
-                let post;
-                if (m.quoted && m.quoted.isMedia) {
-                    const media = await Downloaded();
-                    post = await Func.upload.pomf(media);
-                }
-                const params = {
-                    apikey: config.api.skizo,
-                    text: quoted.text,
-                    avatar,
-                    username: m.pushName,
-                    hex: "ffffff",
-                    ...(m.quoted ? {
-                        ...(m.quoted.text ? {
-                            qtext: m.quoted.text
-                        } : {}),
-                        qname: await client.getName(m.quoted.sender),
-                        ...(m.quoted.isMedia ? {
-                            media: post
-                        } : {})
-                    } : {})
-                };
-
-                const url = `https://skizo.tech/api/qc?${new URLSearchParams(params).toString()}`;
-                let api = await Func.fetchBuffer(url);
-                let sticker = await (await import("./src/lib/sticker.js")).writeExif(api, { packName: config.settings.packName, packPublish: config.settings.packPublish })
+                if (!m.text) return client.reply(m.from, 'Please enter the message.', m)
+                const { result } = await quote(m.text, m.pushName, avatar)
+                let sticker = await (await import('./src/lib/sticker.js')).writeExif({ mimetype: 'image/png', data: await Buffer.from(result.image, 'base64') }, { packName: config.settings.packName, packPublish: config.settings.packPublish });
                 await m.reply({ sticker });
             }
                 break;
