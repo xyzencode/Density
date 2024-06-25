@@ -26,6 +26,7 @@ import { performance } from "perf_hooks";
 import { GPT4 } from "./src/script/chatgpt.js";
 import igdl from "./src/script/instagram.js"
 import { tiktokdl } from "./src/script/tiktok.js";
+import { writeExif } from "./src/lib/sticker.js"
 import dScrape from "d-scrape";
 import quote from "./src/script/quote.js";
 
@@ -568,16 +569,16 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case "fakechat": {
                 const avatar = await client.profilePictureUrl(m.sender, 'image').catch(() => 'https://i.pinimg.com/564x/8a/e9/e9/8ae9e92fa4e69967aa61bf2bda967b7b.jpg');
                 if (!m.text) return client.reply(m.from, 'Please enter the message.', m)
-                const { result } = await quote(m.text, m.pushName, avatar)
-                let sticker = await (await import('./src/lib/sticker.js')).writeExif({ mimetype: 'image/png', data: await Buffer.from(result.image, 'base64') }, { packName: config.settings.packName, packPublish: config.settings.packPublish });
-                await m.reply({ sticker });
+                const res = await quote(m.text, avatar, m.pushName)
+                let sticker = await writeExif({ mimetype: 'image/png', data: await Buffer.from(res.result.image, 'base64') }, { packName: config.settings.packName, packPublish: config.settings.packPublish });
+                await m.reply({ sticker })
             }
                 break;
             case 'ttp':
             case 'attp': {
                 if (!m.text) return client.reply(m.from, 'Please enter the text.', m)
                 const buffer = await Func.fetchBuffer(`https://aemt.me/${m.command}?text=${encodeURIComponent(m.text)}`)
-                let sticker = await (await import("./src/lib/sticker.js")).writeExif(buffer, { packName: config.settings.packName, packPublish: config.settings.packPublish })
+                let sticker = await writeExif(buffer, { packName: config.settings.packName, packPublish: config.settings.packPublish })
                 await m.reply({ sticker });
             }
                 break
@@ -593,7 +594,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 } else {
                     exif = { packName: config.settings.packName, packPublish: config.settings.packPublish };
                 }
-                let sticker = await (await import('./src/lib/sticker.js')).writeExif({ mimetype: quoted.msg.mimetype, data: media }, exif);
+                let sticker = await writeExif({ mimetype: quoted.msg.mimetype, data: media }, exif);
                 await m.reply({ sticker });
             }
                 break

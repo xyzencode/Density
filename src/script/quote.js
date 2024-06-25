@@ -33,6 +33,7 @@ export default function quote(text, ppurl, nickname) {
                 }
             ]
         };
+        console.log(JSON.stringify(json, null, 2));
         try {
             const res = await axios.post("https://bot.lyo.su/quote/generate", JSON.stringify(json, null, 2), {
                 headers: {
