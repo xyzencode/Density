@@ -1,7 +1,16 @@
-
-# ZaydenBot Whatsapp
+# ZaydenBot Multi Device
 
 This is a WhatsApp bot script created by me and my friends, and friends who have helped create this script. I created this with the aim of learning Javascript and studying frameworks and libraries from the NPM and GitHub sites themselves,
+
+[![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#table-of-contents)
+<p align="center"> 
+    <img src="https://telegra.ph/file/9100d1deefbb6360efa8e.png" width="75%" style="margin-left: auto;margin-right: auto;display: block;">
+</p>
+
+
+
+
+
 
 ## Installation
 ```bash
@@ -22,14 +31,6 @@ npm start
 
 npm run pm2:start
 ```
-## Environment Variables
-
-To run this project, you will need to add the following environment variables to your .env file
-
-`REPLICATE_API_TOKEN`
-
-`API_KEY_SKIZO`
-
 
 ## Features
 
@@ -39,11 +40,13 @@ To run this project, you will need to add the following environment variables to
 - Fast Respon
 - Simple Menu
 - Free Recode
+- No Used API
+- No Scan
 
 
 ## Authors
 
-- [Muhammad Adriansyah](https://github.com/xyzencode)
+- [Zayden](https://github.com/xyzencode)
 
 
 ## Feedback
