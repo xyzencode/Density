@@ -29,9 +29,11 @@ import { tiktokdl } from "./src/script/tiktok.js";
 import { writeExif } from "./src/lib/sticker.js"
 import dScrape from "d-scrape";
 import quote from "./src/script/quote.js";
+import getContact from "./private/getcontact.js";
 
+
+const premium = JSON.parse(readFileSync('./src/storage/json/premium.json'));
 const antilink = JSON.parse(readFileSync('./src/storage/json/antilink.json'));
-const autoai = JSON.parse(readFileSync('./src/storage/json/autoai.json'));
 const USERS = JSON.parse(readFileSync('./src/storage/json/users.json'));
 
 export default async function message(client, store, m, chatUpdate) {
@@ -44,7 +46,6 @@ export default async function message(client, store, m, chatUpdate) {
         let isUsers = USERS.includes(m.sender)
         let isCommand = (m.prefix && m.body.startsWith(m.prefix)) || false
         let isAntiLink = antilink.includes(m.from) && m.isGroup
-        let isAutoAI = m.from.endsWith("@s.whatsapp.net") && autoai.includes(m.from)
 
         if (isAntiLink) {
             if (m.body.includes("whatsapp.com") || m.body.includes("wa.me") || m.body.includes("chat.whatsapp")) {
@@ -53,7 +54,6 @@ export default async function message(client, store, m, chatUpdate) {
                 await client.sendMessage(m.from, { delete: quoted.key })
             }
         }
-
 
         if (m.isBot) return;
 
@@ -97,7 +97,26 @@ export default async function message(client, store, m, chatUpdate) {
                     });
                 });
 
-                client.reply(m.from, txt, m);
+                await client.sendMessage(m.from, {
+                    text: txt,
+                    contextInfo: {
+                        forwardingScore: 999,
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: "120363302746044690@newsletter",
+                            newsletterName: "Powered By Adrian",
+                        },
+                        externalAdReply: {
+                            title: `Hello ${m.pushName} 👋🏻`,
+                            body: "Powered By Adrian",
+                            thumbnail: readFileSync("./src/storage/image/image-1.png"),
+                            sourceUrl: "https://github.com/xyzencode/ZaydenBot",
+                            showAdAttribution: true,
+                            renderLargerThumbnail: true,
+                            mediaType: 1
+                        }
+                    }
+                }, { quoted: m });
             }
                 break
 
@@ -598,12 +617,6 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 await m.reply({ sticker });
             }
                 break
-            case 'getcase':
-                if (!isOwner) return client.reply(m.from, mess.owner, m)
-                if (!m.text) return client.reply(m.from, 'Please enter the case', m)
-                await client.reply(m.from, Func.getCase(m.text), m)
-                break
-
             case 'listonline':
             case 'here': {
                 if (!m.isGroup) return client.reply(m.from, mess.group, m)
@@ -615,6 +628,16 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 for (let user of online) {
                     txt += `${liston++}. ${user.replace(/@.+/, '')}\n`
                 }
+                await client.reply(m.from, txt, m)
+            }
+                break
+            case 'khodam':
+            case 'cekkhodam': {
+                if (!m.text) return client.reply(m.from, 'Please enter the name.', m)
+                const isModule = (await import("./src/script/khodam.js")).default
+                const res = await isModule(m.text);
+                let txt = `*Nama:* ${res.nama}\n`
+                txt += `*Nama Khodam:* ${res.khodam}\n`
                 await client.reply(m.from, txt, m)
             }
                 break

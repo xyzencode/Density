@@ -14,8 +14,8 @@ export default {
     pairing_code: true,
     self: false,
     groupOnly: true,
-    packName: "",
-    packPublish: "© OLXYZ 2024 GEN 2"
+    packName: 'ZaydenBot',
+    packPublish: "Powered By Adriansyah",
 }
 
 let fileP = fileURLToPath(import.meta.url);

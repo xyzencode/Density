@@ -16,6 +16,7 @@ import { watchFile, unwatchFile, writeFileSync } from 'fs';
 import pino from "pino"
 import { fileTypeFromBuffer } from "file-type";
 import { randomBytes } from "crypto";
+import jimp from "jimp";
 
 const { proto, generateWAMessageFromContent } = baileys
 
@@ -91,6 +92,7 @@ export function Module({ client, store }) {
                 }
             }
         },
+
         sendContact: {
             async value(jid, number, quoted, options = {}) {
                 let list = [];
@@ -99,7 +101,7 @@ export function Module({ client, store }) {
                     v = v.replace(/\D+/g, "");
                     list.push({
                         displayName: await client.getName(v + "@s.whatsapp.net"),
-                        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await client.getName(v + "@s.whatsapp.net")}\nFN:${await client.getName(v + "@s.whatsapp.net")}\nitem1.TEL;waid=${v}:${v}\nEND:VCARD`
+                        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await client.getName(v + '@s.whatsapp.net')}\nFN:${await client.getName(v + '@s.whatsapp.net')}\nitem1.TEL;waid=${v}:${v}\nitem1.X-ABLabel:Ponsel\nitem2.EMAIL;type=INTERNET:owner@zayden.dev\nitem2.X-ABLabel:Email\nitem3.URL:https://xyzen.tech\nitem3.X-ABLabel:pPrtofolio\nitem4.ADR:;;Indonesia;;;;\nitem4.X-ABLabel:Region\nEND:VCARD`
                     });
                 }
                 return client.sendMessage(jid, {
@@ -143,6 +145,14 @@ export function Module({ client, store }) {
         reply: {
             value(jid, text, quoted, options = {}) {
                 return client.sendMessage(jid, { text }, { quoted, ...options });
+            }
+        },
+
+        resize: {
+            async value(media, width, height) {
+                let image = await jimp.read(media);
+                image.resize(width, height);
+                return await image.getBufferAsync(jimp.MIME_JPEG);
             }
         },
 

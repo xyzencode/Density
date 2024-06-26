@@ -1,4 +1,3 @@
-import axios from "axios";
 /** 
  *  Created By Muhammad Adriansyah
  *  CopyRight 2024 MIT License
@@ -6,6 +5,8 @@ import axios from "axios";
  *  My Instagram : https://instagram.com/xyzencode
  *  My Youtube : https://youtube.com/@xyzencode
 */
+
+import axios from "axios";
 
 export default async function igdl(url) {
     try {

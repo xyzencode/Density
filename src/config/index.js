@@ -12,9 +12,8 @@ import { watchFile, unwatchFile } from "fs";
 import mess from "./mess.js";
 import settings from "./settings.js";
 import number from "./number.js"
-import api from "./api.js"
 
-export default { mess, settings, number, api }
+export default { mess, settings, number }
 
 let fileP = fileURLToPath(import.meta.url);
 watchFile(fileP, () => {
