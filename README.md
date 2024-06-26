@@ -3,10 +3,12 @@
 This is a WhatsApp bot script created by me and my friends, and friends who have helped create this script. I created this with the aim of learning Javascript and studying frameworks and libraries from the NPM and GitHub sites themselves,
 
 [![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#table-of-contents)
+
 <p align="center"> 
     <img src="https://telegra.ph/file/9100d1deefbb6360efa8e.png" width="75%" style="margin-left: auto;margin-right: auto;display: block;">
 </p>
 
+[![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#table-of-contents)
 
 
 
