@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 
-export async function npmstalk(packageName) {
+export default async function npmstalk(packageName) {
     let stalk = await axios.get("https://registry.npmjs.org/" + packageName)
     let versions = stalk.data.versions
     let allver = Object.keys(versions)

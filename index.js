@@ -8,6 +8,6 @@
 
 console.clear();
 
-await import("./src/lib/start.js").then(({ default: start }) => {
+await import("./SCRIPT/systems/start.js").then(({ default: start }) => {
     start("main.js");
 });

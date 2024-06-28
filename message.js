@@ -7,34 +7,28 @@
 */
 
 import baileys from "@xyzendev/baileys";
-import config from "./src/config/index.js"
-import mess from "./src/config/mess.js"
-import { appenTextMessage } from "./src/lib/serialize.js";
-import * as Func from "./src/lib/functions.js"
+import config from "./SCRIPT/config/index.js"
+import mess from "./SCRIPT/config/mess.js"
+import { appenTextMessage } from "./SCRIPT/systems/serialize.js";
+import * as Func from "./SCRIPT/systems/functions.js"
 import os from "os"
 import util from "util"
 import chalk from "chalk"
-import { readFileSync, unwatchFile, watchFile, writeFileSync } from "fs";
+import { readFileSync, unlinkSync, unwatchFile, watchFile, writeFileSync } from "fs";
 import axios from 'axios';
 import { fileURLToPath } from "url";
 import { exec } from "child_process";
 import speed from "performance-now"
 import ytdl from 'youtubedl-core';
-import { search, ytmp3, ytmp4 } from "./src/script/youtube.js";
-import downloadTrack, { searchSpoti } from "./src/script/spotify.js";
 import { performance } from "perf_hooks";
-import { GPT4 } from "./src/script/chatgpt.js";
-import igdl from "./src/script/instagram.js"
-import { tiktokdl } from "./src/script/tiktok.js";
-import { writeExif } from "./src/lib/sticker.js"
+import { writeExif } from "./SCRIPT/systems/sticker.js"
 import dScrape from "d-scrape";
-import quote from "./src/script/quote.js";
-import getContact from "./private/getcontact.js";
+import { GPT, igdl, Khodam, npmstalk, quote, downloadTrack, searchSpoti, tiktokdl, ttslide, processing, ytmp3, ytmp4, search } from "./SCRIPT/scapers/index.js"
+import { toAudio } from "./SCRIPT/systems/converts.js";
 
-
-const premium = JSON.parse(readFileSync('./src/storage/json/premium.json'));
-const antilink = JSON.parse(readFileSync('./src/storage/json/antilink.json'));
-const USERS = JSON.parse(readFileSync('./src/storage/json/users.json'));
+const premium = JSON.parse(readFileSync('./SCRIPT/storage/json/premium.json'));
+const antilink = JSON.parse(readFileSync('./SCRIPT/storage/json/antilink.json'));
+const USERS = JSON.parse(readFileSync('./SCRIPT/storage/json/users.json'));
 
 export default async function message(client, store, m, chatUpdate) {
     try {
@@ -42,7 +36,7 @@ export default async function message(client, store, m, chatUpdate) {
         let quoted = m.isQuoted ? m.quoted : m
         let Downloaded = async (fileName) => await client.downloadMediaMessage(quoted, fileName)
         let isOwner = JSON.stringify(config.number.owner).includes(m.sender.replace(/\D+/g, "")) || false
-        let isPremium = JSON.parse(readFileSync("./src/storage/json/premium.json")).map(v => v.replace(/[^0-9]/g, "")).includes(m.sender.replace(/\D+/g, "")) || isOwner
+        let isPremium = JSON.parse(readFileSync("./SCRIPT/storage/json/premium.json")).map(v => v.replace(/[^0-9]/g, "")).includes(m.sender.replace(/\D+/g, "")) || isOwner
         let isUsers = USERS.includes(m.sender)
         let isCommand = (m.prefix && m.body.startsWith(m.prefix)) || false
         let isAntiLink = antilink.includes(m.from) && m.isGroup
@@ -64,7 +58,7 @@ export default async function message(client, store, m, chatUpdate) {
         if (m.message && !m.isBot) {
             if (!isUsers) {
                 USERS.push(m.sender)
-                writeFileSync('./src/storage/json/users.json', JSON.stringify(USERS, null, 2))
+                writeFileSync('./SCRIPT/storage/json/users.json', JSON.stringify(USERS, null, 2))
             }
 
             console.log(
@@ -88,7 +82,7 @@ export default async function message(client, store, m, chatUpdate) {
             case "menu":
             case "allmenu":
             case "help": {
-                const menu = await (await import("./src/config/menu.js")).default
+                const menu = await (await import("./SCRIPT/config/menu.js")).default
                 let txt = `Hello ${m.pushName} 👋🏻\n`;
                 Object.keys(menu).forEach((category) => {
                     txt += `\n*${category.toUpperCase()}*\n`;
@@ -109,7 +103,7 @@ export default async function message(client, store, m, chatUpdate) {
                         externalAdReply: {
                             title: `Hello ${m.pushName} 👋🏻`,
                             body: "Powered By Adrian",
-                            thumbnail: readFileSync("./src/storage/image/image-1.png"),
+                            thumbnail: readFileSync("./SCRIPT/storage/image/image-1.png"),
                             sourceUrl: "https://github.com/xyzencode/ZaydenBot",
                             showAdAttribution: true,
                             renderLargerThumbnail: true,
@@ -140,7 +134,7 @@ export default async function message(client, store, m, chatUpdate) {
                         externalAdReply: {
                             title: "MIT License",
                             body: 'Copyright (c) 2024 Muhammad Adriansyah',
-                            thumbnail: readFileSync('./src/storage/image/MIT.png'),
+                            thumbnail: readFileSync('./SCRIPT/storage/image/MIT.png'),
                             showAdAttribution: true,
                             renderLargerThumbnail: true,
                             mediaType: 1
@@ -248,7 +242,6 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                         let upload = await Func.upload.telegra(media);
                         let res = await Func.getBuffer(upload);
                         let imageData = Buffer.from(res, 'binary');
-                        let { processing } = (await import("./src/script/upscale.js"))
                         let pros = await processing(imageData, 'enhance');
                         var error;
                         client.sendMessage(m.from, { image: pros, caption: mess.success }, { quoted: m });
@@ -283,7 +276,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'pinterest': {
                 if (!m.text) return client.reply(m.from, mess.media.query, m);
                 const [query, countStr] = m.text.split("|");
-                const rules = JSON.parse(readFileSync('./src/storage/json/pinterest.json'));
+                const rules = JSON.parse(readFileSync('./SCRIPT/storage/json/pinterest.json'));
                 if (rules.some(rule => m.text.includes(rule))) return client.reply(m.from, mess.notAllow, m);
                 let count = countStr ? parseInt(countStr) : 1;
                 if (!query) return client.reply(m.from, mess.media.query, m);
@@ -312,10 +305,10 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'addrulespin':
             case 'addpinrule': {
                 if (!m.text) return client.reply(m.from, 'Enter Rules', m)
-                const rules = JSON.parse(readFileSync('./src/storage/json/pinterest.json'))
+                const rules = JSON.parse(readFileSync('./SCRIPT/storage/json/pinterest.json'))
                 if (rules.includes(m.text)) return client.reply(m.from, 'Rules already exist', m);
                 rules.push(m.text)
-                writeFileSync('./src/storage/json/pinterest.json', JSON.stringify(rules))
+                writeFileSync('./SCRIPT/storage/json/pinterest.json', JSON.stringify(rules))
                 client.reply(m.from, 'Rules Added', m)
             }
                 break
@@ -323,10 +316,10 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'delrulespin':
             case 'delpinrule': {
                 if (!m.text) return client.reply(m.from, 'Enter Rules', m)
-                const rules = JSON.parse(readFileSync('./src/storage/json/pinterest.json'))
+                const rules = JSON.parse(readFileSync('./SCRIPT/storage/json/pinterest.json'))
                 if (!rules.includes(m.text)) return client.reply(m.from, 'There are no rules', m);
                 rules.splice(rules.indexOf(m.text), 1)
-                writeFileSync('./src/storage/json/pinterest.json', JSON.stringify(rules))
+                writeFileSync('./SCRIPT/storage/json/pinterest.json', JSON.stringify(rules))
                 client.reply(m.from, 'Rules Removed', m)
             }
                 break
@@ -491,12 +484,12 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 if (m.text === "on") {
                     if (antilink.includes(m.from)) return client.reply(m.from, "Anti-link has been activated in this group.", m);
                     antilink.push(m.from);
-                    writeFileSync("./src/storage/json/antilink.json", JSON.stringify(antilink));
+                    writeFileSync("./SCRIPT/storage/json/antilink.json", JSON.stringify(antilink));
                     client.reply(m.from, "Successfully activated anti-link in this group.", m);
                 } else if (m.text === "off") {
                     if (!antilink.includes(m.from)) return m.reply("Anti-link has been disabled in this group.");
                     antilink.splice(antilink.indexOf(m.from), 1);
-                    writeFileSync("./src/storage/json/antilink.json", JSON.stringify(antilink));
+                    writeFileSync("./SCRIPT/storage/json/antilink.json", JSON.stringify(antilink));
                     client.reply(m.from, "Successfully deactivated anti-link in this group.", m);
                 }
             }
@@ -617,6 +610,21 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 await m.reply({ sticker });
             }
                 break
+            case 'tomp3':
+            case 'toaudio': {
+                if (!quoted.isMedia) return client.reply(m.from, mess.media.default, m);
+                const id = quoted.id.replace('3EB0', '3EB0C')
+                let media = await Downloaded();
+                await client.reply(m.from, config.mess.wait, m)
+                await toAudio(media).then(async (res) => {
+                    await client.sendMessage(m.from, { audio: res.data, mimetype: 'audio/mp4' }, { quoted: m });
+                }).catch((err) => {
+                    console.error(err)
+                    client.reply(m.from, mess.error, m)
+                })
+                await unlinkSync(id + ".mp4")
+            }
+                break
             case 'listonline':
             case 'here': {
                 if (!m.isGroup) return client.reply(m.from, mess.group, m)
@@ -634,10 +642,9 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'khodam':
             case 'cekkhodam': {
                 if (!m.text) return client.reply(m.from, 'Please enter the name.', m)
-                const isModule = (await import("./src/script/khodam.js")).default
-                const res = await isModule(m.text);
+                const res = await Khodam(m.text);
                 let txt = `*Nama:* ${res.nama}\n`
-                txt += `*Nama Khodam:* ${res.khodam}\n`
+                txt += `*Nama Khodam:* ${res.khodam}`
                 await client.reply(m.from, txt, m)
             }
                 break

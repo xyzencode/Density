@@ -1,7 +1,7 @@
 // Copas + Modif Sama Gw
 import FormData from "form-data";
 
-export async function processing(urlPath, method) {
+export default async function processing(urlPath, method) {
     try {
         return new Promise(async (resolve, reject) => {
             let Methods = ["enhance", "recolor", "dehaze"];

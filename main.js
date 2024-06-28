@@ -6,12 +6,12 @@
  *  My Youtube : https://youtube.com/@xyzencode
 */
 
-import config from "./src/config/index.js";
+import config from "./SCRIPT/config/index.js";
 import makeWASocket, { Browsers, delay, DisconnectReason, fetchLatestWaWebVersion, jidNormalizedUser, makeCacheableSignalKeyStore, makeInMemoryStore, PHONENUMBER_MCC, useMultiFileAuthState } from "@xyzendev/baileys";
 import { Boom } from "@hapi/boom";
-import treeKill from "./src/lib/tree-kill.js";
+import treeKill from "./SCRIPT/systems/tree-kill.js";
 import pino from "pino";
-import smsg, { Module } from "./src/lib/serialize.js";
+import smsg, { Module } from "./SCRIPT/systems/serialize.js";
 import message from "./message.js"
 import fs from "fs"
 import { exec } from "child_process";
