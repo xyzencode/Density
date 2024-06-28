@@ -392,6 +392,7 @@ export default async function smsg(client, msg, store) {
             m.expiration = m.msg?.contextInfo?.expiration || 0;
             m.timestamps = (typeof msg.messageTimestamp === "number") ? msg.messageTimestamp * 1000 : m.msg.timestampMs * 1000;
             m.isMedia = !!m.msg?.mimetype || !!m.msg?.thumbnailDirectPath;
+            m.isBaileys = m.id.startsWith('BAE5') && m.id.length === 16
             m.isQuoted = false;
 
             if (m.msg?.contextInfo?.quotedMessage) {
@@ -422,6 +423,7 @@ export default async function smsg(client, msg, store) {
                     m.quoted.command = m.quoted.body && m.quoted.body.replace(m.quoted.prefix, '').trim().split(/ +/).shift();
                     m.quoted.args = m.quoted.body.trim().replace(new RegExp("^" + escapeRegExp(m.quoted.prefix), 'i'), '').replace(m.quoted.command, '').split(/ +/).filter(a => a) || [];
                     m.quoted.text = m.quoted.args.join(" ").trim() || m.quoted.body;
+                    m.quoted.isBaileys = m.quoted.id ? m.quoted.id.startsWith('BAE5') && m.quoted.id.length === 16 : false
                 }
             }
         }

@@ -1,12 +1,11 @@
-import {
-    promises
-} from 'fs'
-import {
-    join
-} from 'path'
-import {
-    spawn
-} from 'child_process'
+// Description: This file contains the convert functions.
+// Cuma buat convert doang, jangan diapa-apain.
+// Cuma Fix Daong hehehe
+// By Muhammad Adriansyah
+
+import { promises } from 'fs'
+import { join } from 'path'
+import { spawn } from 'child_process'
 
 function ffmpeg(buffer, args = [], ext = '', ext2 = '') {
     return new Promise(async (resolve, reject) => {
@@ -61,20 +60,17 @@ function toAudio(buffer, ext) {
     ], ext, 'opus')
 }
 
-function toVideo(buffer, ext) {
+function toImage(buffer, ext) {
     return ffmpeg(buffer, [
-        '-c:v', 'libx264',
-        '-c:a', 'aac',
-        '-ab', '128k',
-        '-ar', '44100',
-        '-crf', '32',
-        '-preset', 'slow'
-    ], ext, 'mp4')
+        '-vf', 'scale=1080:1080',
+        '-q:v', '2',
+        '-vframes', '1'
+    ], ext, 'jpg')
 }
 
 export {
     toAudio,
     toPTT,
-    toVideo,
     ffmpeg,
+    toImage
 }

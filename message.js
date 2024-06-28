@@ -14,7 +14,7 @@ import * as Func from "./core/systems/functions.js"
 import os from "os"
 import util from "util"
 import chalk from "chalk"
-import { readFileSync, unlinkSync, unwatchFile, watchFile, writeFileSync } from "fs";
+import { readFileSync, unwatchFile, watchFile, writeFileSync } from "fs";
 import axios from 'axios';
 import { fileURLToPath } from "url";
 import { exec } from "child_process";
@@ -24,7 +24,7 @@ import { performance } from "perf_hooks";
 import { writeExif } from "./core/systems/sticker.js"
 import dScrape from "d-scrape";
 import { GPT, igdl, Khodam, npmstalk, quote, downloadTrack, searchSpoti, tiktokdl, ttslide, processing, ytmp3, ytmp4, search } from "./core/scapers/index.js"
-import { toAudio } from "./core/systems/converts.js";
+import { toAudio, toImage } from "./core/systems/converts.js";
 
 const premium = JSON.parse(readFileSync('./core/storage/json/premium.json'));
 const antilink = JSON.parse(readFileSync('./core/storage/json/antilink.json'));
@@ -283,11 +283,11 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 if (count > 10) return client.reply(m.from, 'Max 5', m);
 
                 try {
-                    const res = await Func.fetchJson(`https://api.xyzen.tech/api/search/pinterest?query=${query}`);
-                    if (!res.result || res.result.length === 0) return client.reply(m.from, mess.notfound, m);
+                    const res = await dScrape.search.pinterest(query);
+                    if (!res || res.length === 0) return client.reply(m.from, mess.notfound, m);
                     const jmlh = []
                     for (let i = 0; i < count; i++) {
-                        const pick = Func.pickRandom(res.result)
+                        const pick = Func.pickRandom(res)
                         jmlh.push(pick)
                     }
                     if (jmlh.length === 1) {
@@ -613,11 +613,22 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'tomp3':
             case 'toaudio': {
                 if (!quoted.isMedia) return client.reply(m.from, mess.media.default, m);
-                const id = quoted.id.replace('3EB0', '3EB0C')
                 let media = await Downloaded();
                 await client.reply(m.from, config.mess.wait, m)
                 await toAudio(media).then(async (res) => {
                     await client.sendMessage(m.from, { audio: res.data, mimetype: 'audio/mp4' }, { quoted: m });
+                }).catch((err) => {
+                    console.error(err)
+                    client.reply(m.from, mess.error, m)
+                })
+            }
+                break
+            case 'toimg':
+            case 'toimage': {
+                if (!quoted.isMedia) return client.reply(m.from, mess.media.default, m)
+                let media = await Downloaded();
+                await toImage(media).then(async (res) => {
+                    await client.sendMessage(m.from, { image: res.data, mimetype: 'image/jpeg' }, { quoted: m });
                 }).catch((err) => {
                     console.error(err)
                     client.reply(m.from, mess.error, m)
