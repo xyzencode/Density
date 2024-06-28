@@ -7,10 +7,10 @@
 */
 
 import baileys from "@xyzendev/baileys";
-import config from "./SCRIPT/config/index.js"
-import mess from "./SCRIPT/config/mess.js"
-import { appenTextMessage } from "./SCRIPT/systems/serialize.js";
-import * as Func from "./SCRIPT/systems/functions.js"
+import config from "./core/config/index.js"
+import mess from "./core/config/mess.js"
+import { appenTextMessage } from "./core/systems/serialize.js";
+import * as Func from "./core/systems/functions.js"
 import os from "os"
 import util from "util"
 import chalk from "chalk"
@@ -21,14 +21,14 @@ import { exec } from "child_process";
 import speed from "performance-now"
 import ytdl from 'youtubedl-core';
 import { performance } from "perf_hooks";
-import { writeExif } from "./SCRIPT/systems/sticker.js"
+import { writeExif } from "./core/systems/sticker.js"
 import dScrape from "d-scrape";
-import { GPT, igdl, Khodam, npmstalk, quote, downloadTrack, searchSpoti, tiktokdl, ttslide, processing, ytmp3, ytmp4, search } from "./SCRIPT/scapers/index.js"
-import { toAudio } from "./SCRIPT/systems/converts.js";
+import { GPT, igdl, Khodam, npmstalk, quote, downloadTrack, searchSpoti, tiktokdl, ttslide, processing, ytmp3, ytmp4, search } from "./core/scapers/index.js"
+import { toAudio } from "./core/systems/converts.js";
 
-const premium = JSON.parse(readFileSync('./SCRIPT/storage/json/premium.json'));
-const antilink = JSON.parse(readFileSync('./SCRIPT/storage/json/antilink.json'));
-const USERS = JSON.parse(readFileSync('./SCRIPT/storage/json/users.json'));
+const premium = JSON.parse(readFileSync('./core/storage/json/premium.json'));
+const antilink = JSON.parse(readFileSync('./core/storage/json/antilink.json'));
+const USERS = JSON.parse(readFileSync('./core/storage/json/users.json'));
 
 export default async function message(client, store, m, chatUpdate) {
     try {
@@ -36,7 +36,7 @@ export default async function message(client, store, m, chatUpdate) {
         let quoted = m.isQuoted ? m.quoted : m
         let Downloaded = async (fileName) => await client.downloadMediaMessage(quoted, fileName)
         let isOwner = JSON.stringify(config.number.owner).includes(m.sender.replace(/\D+/g, "")) || false
-        let isPremium = JSON.parse(readFileSync("./SCRIPT/storage/json/premium.json")).map(v => v.replace(/[^0-9]/g, "")).includes(m.sender.replace(/\D+/g, "")) || isOwner
+        let isPremium = JSON.parse(readFileSync("./core/storage/json/premium.json")).map(v => v.replace(/[^0-9]/g, "")).includes(m.sender.replace(/\D+/g, "")) || isOwner
         let isUsers = USERS.includes(m.sender)
         let isCommand = (m.prefix && m.body.startsWith(m.prefix)) || false
         let isAntiLink = antilink.includes(m.from) && m.isGroup
@@ -58,7 +58,7 @@ export default async function message(client, store, m, chatUpdate) {
         if (m.message && !m.isBot) {
             if (!isUsers) {
                 USERS.push(m.sender)
-                writeFileSync('./SCRIPT/storage/json/users.json', JSON.stringify(USERS, null, 2))
+                writeFileSync('./core/storage/json/users.json', JSON.stringify(USERS, null, 2))
             }
 
             console.log(
@@ -82,7 +82,7 @@ export default async function message(client, store, m, chatUpdate) {
             case "menu":
             case "allmenu":
             case "help": {
-                const menu = await (await import("./SCRIPT/config/menu.js")).default
+                const menu = await (await import("./core/config/menu.js")).default
                 let txt = `Hello ${m.pushName} 👋🏻\n`;
                 Object.keys(menu).forEach((category) => {
                     txt += `\n*${category.toUpperCase()}*\n`;
@@ -103,7 +103,7 @@ export default async function message(client, store, m, chatUpdate) {
                         externalAdReply: {
                             title: `Hello ${m.pushName} 👋🏻`,
                             body: "Powered By Adrian",
-                            thumbnail: readFileSync("./SCRIPT/storage/image/image-1.png"),
+                            thumbnail: readFileSync("./core/storage/image/image-1.png"),
                             sourceUrl: "https://github.com/xyzencode/ZaydenBot",
                             showAdAttribution: true,
                             renderLargerThumbnail: true,
@@ -134,7 +134,7 @@ export default async function message(client, store, m, chatUpdate) {
                         externalAdReply: {
                             title: "MIT License",
                             body: 'Copyright (c) 2024 Muhammad Adriansyah',
-                            thumbnail: readFileSync('./SCRIPT/storage/image/MIT.png'),
+                            thumbnail: readFileSync('./core/storage/image/MIT.png'),
                             showAdAttribution: true,
                             renderLargerThumbnail: true,
                             mediaType: 1
@@ -276,7 +276,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'pinterest': {
                 if (!m.text) return client.reply(m.from, mess.media.query, m);
                 const [query, countStr] = m.text.split("|");
-                const rules = JSON.parse(readFileSync('./SCRIPT/storage/json/pinterest.json'));
+                const rules = JSON.parse(readFileSync('./core/storage/json/pinterest.json'));
                 if (rules.some(rule => m.text.includes(rule))) return client.reply(m.from, mess.notAllow, m);
                 let count = countStr ? parseInt(countStr) : 1;
                 if (!query) return client.reply(m.from, mess.media.query, m);
@@ -305,10 +305,10 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'addrulespin':
             case 'addpinrule': {
                 if (!m.text) return client.reply(m.from, 'Enter Rules', m)
-                const rules = JSON.parse(readFileSync('./SCRIPT/storage/json/pinterest.json'))
+                const rules = JSON.parse(readFileSync('./core/storage/json/pinterest.json'))
                 if (rules.includes(m.text)) return client.reply(m.from, 'Rules already exist', m);
                 rules.push(m.text)
-                writeFileSync('./SCRIPT/storage/json/pinterest.json', JSON.stringify(rules))
+                writeFileSync('./core/storage/json/pinterest.json', JSON.stringify(rules))
                 client.reply(m.from, 'Rules Added', m)
             }
                 break
@@ -316,10 +316,10 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'delrulespin':
             case 'delpinrule': {
                 if (!m.text) return client.reply(m.from, 'Enter Rules', m)
-                const rules = JSON.parse(readFileSync('./SCRIPT/storage/json/pinterest.json'))
+                const rules = JSON.parse(readFileSync('./core/storage/json/pinterest.json'))
                 if (!rules.includes(m.text)) return client.reply(m.from, 'There are no rules', m);
                 rules.splice(rules.indexOf(m.text), 1)
-                writeFileSync('./SCRIPT/storage/json/pinterest.json', JSON.stringify(rules))
+                writeFileSync('./core/storage/json/pinterest.json', JSON.stringify(rules))
                 client.reply(m.from, 'Rules Removed', m)
             }
                 break
@@ -383,7 +383,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             // Tiktok Commands
             case "tiktok": {
                 if (!m.text) return client.reply(m.from, mess.media.url, m)
-                await client.sendList(m.from, '*Tiktok Downloader*', 'Powered By Adrian', { title: 'Click Me :)', sections: [{ title: "Pilih Salah Satunya", highlight_label: 'Rekomendasi', rows: [{ title: "Video Tiktok", description: "Download Video Tiktok", id: '.tiktokdl ' + m.text }, { title: "Audio Tiktok", description: "Download Audio Tiktok", id: '.tiktokaudiodl ' + m.text }] }] })
+                await client.sendList(m.from, '*Tiktok Downloader*', 'Powered By Adrian', { title: 'Click Me :)', sections: [{ title: "Pilih Salah Satunya", highlight_label: 'Rekomendasi', rows: [{ title: "Video Tiktok", decoreion: "Download Video Tiktok", id: '.tiktokdl ' + m.text }, { title: "Audio Tiktok", decoreion: "Download Audio Tiktok", id: '.tiktokaudiodl ' + m.text }] }] })
             }
                 break
 
@@ -421,7 +421,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                             highlight_label: "Best Result",
                             rows: res.map(a => ({
                                 title: a.name.toUpperCase(),
-                                description: a.artist.toUpperCase(),
+                                decoreion: a.artist.toUpperCase(),
                                 id: '.spotifydl ' + a.url
                             }))
                         }]
@@ -442,7 +442,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 if (!m.text) return client.reply(m.from, mess.media.prompt, m)
                 let res = await search(m.text)
                 if (res.length === 0) return client.reply(m.from, mess.notfound, m)
-                client.sendList(m.from, "Result", "Powered By Adrian", { title: 'Click Me :)', sections: [{ title: "Hasil Pencarian", highlight_label: "Best Result", rows: res.map(a => ({ title: a.title.toUpperCase(), description: a.description.toUpperCase(), id: `.ytdl ${a.url}` })) }] })
+                client.sendList(m.from, "Result", "Powered By Adrian", { title: 'Click Me :)', sections: [{ title: "Hasil Pencarian", highlight_label: "Best Result", rows: res.map(a => ({ title: a.title.toUpperCase(), decoreion: a.decoreion.toUpperCase(), id: `.ytdl ${a.url}` })) }] })
             }
                 break
 
@@ -451,9 +451,9 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case "youtube": {
                 if (!m.text) return client.reply(m.from, mess.media.url, m)
                 let img = (await ytdl.getInfo(m.text)).videoDetails.thumbnails[4].url
-                const { title, description } = (await ytdl.getBasicInfo(m.text)).videoDetails
-                const text = `*${title.toUpperCase()}*\n\n${description}`
-                client.sendListWithImage(m.from, text, "Powered By Adrian", { title: 'Click Me :)', sections: [{ title: "Pilih Format", rows: [{ title: "MP3", description: "Download lagu dalam format MP3", id: `.ytmp3 ${m.text}` }, { title: "MP4", description: "Download video dalam format MP4", id: `.ytmp4 ${m.text}` }] }] }, img, { contextInfo: { mentionedJid: [m.sender], isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363182916458068@newsletter", newsletterName: 'Powered By Adrian', serverMessageId: -1 }, } })
+                const { title, decoreion } = (await ytdl.getBasicInfo(m.text)).videoDetails
+                const text = `*${title.toUpperCase()}*\n\n${decoreion}`
+                client.sendListWithImage(m.from, text, "Powered By Adrian", { title: 'Click Me :)', sections: [{ title: "Pilih Format", rows: [{ title: "MP3", decoreion: "Download lagu dalam format MP3", id: `.ytmp3 ${m.text}` }, { title: "MP4", decoreion: "Download video dalam format MP4", id: `.ytmp4 ${m.text}` }] }] }, img, { contextInfo: { mentionedJid: [m.sender], isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363182916458068@newsletter", newsletterName: 'Powered By Adrian', serverMessageId: -1 }, } })
             }
                 break
 
@@ -484,12 +484,12 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 if (m.text === "on") {
                     if (antilink.includes(m.from)) return client.reply(m.from, "Anti-link has been activated in this group.", m);
                     antilink.push(m.from);
-                    writeFileSync("./SCRIPT/storage/json/antilink.json", JSON.stringify(antilink));
+                    writeFileSync("./core/storage/json/antilink.json", JSON.stringify(antilink));
                     client.reply(m.from, "Successfully activated anti-link in this group.", m);
                 } else if (m.text === "off") {
                     if (!antilink.includes(m.from)) return m.reply("Anti-link has been disabled in this group.");
                     antilink.splice(antilink.indexOf(m.from), 1);
-                    writeFileSync("./SCRIPT/storage/json/antilink.json", JSON.stringify(antilink));
+                    writeFileSync("./core/storage/json/antilink.json", JSON.stringify(antilink));
                     client.reply(m.from, "Successfully deactivated anti-link in this group.", m);
                 }
             }
@@ -622,7 +622,6 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                     console.error(err)
                     client.reply(m.from, mess.error, m)
                 })
-                await unlinkSync(id + ".mp4")
             }
                 break
             case 'listonline':
