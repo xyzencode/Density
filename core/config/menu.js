@@ -11,7 +11,9 @@ import { watchFile, unwatchFile } from "fs";
 
 export default {
     owner: [
-        'getcase'
+        'setppbot',
+        'addpremium',
+        'delpremium'
     ],
     main: [
         "owner",
@@ -22,6 +24,7 @@ export default {
     download: [
         "instagram",
         'igstory',
+        'mediafire',
         "tiktokdl",
         "tiktok",
         'tiktokmusic',
@@ -52,7 +55,12 @@ export default {
         'quotely',
         'attp',
         'ttp',
-        'sticker'
+        'cekkhodam'
+    ],
+    convert: [
+        'sticker',
+        'toaudio',
+        'toimage'
     ],
     ai: [
         'openai',

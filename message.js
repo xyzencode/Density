@@ -658,6 +658,67 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 await client.reply(m.from, txt, m)
             }
                 break
+            case 'setppbot':
+            case 'setpp': {
+                if (!isOwner) return client.reply(m.from, mess.owner, m);
+                if (!quoted.isMedia) return client.reply(m.from, mess.media.image, m)
+                let media = await Downloaded();
+                if (m.args[0] === 'full') {
+                    var { img } = await Func.generateProfilePicture(media)
+                    await client.query({
+                        ttag: 'iq',
+                        attrs: {
+                            to: m.botNumber,
+                            type: 'set',
+                            xmlns: 'w:profile:picture'
+                        },
+                        content: [
+                            {
+                                tag: 'picture',
+                                attrs: { type: 'image' },
+                                content: img
+                            }
+                        ]
+                    })
+                    client.reply(m.from, 'Success change profile picture', m)
+                } else {
+                    await client.updateProfilePicture(m.botNumber, { url: media })
+                    client.reply(m.from, 'Success change profile picture', m)
+                }
+            }
+                break
+            case 'addprem':
+            case 'addpremium': {
+                if (!isOwner) return client.reply(m.from, mess.owner, m);
+                if (!m.text) return client.reply(m.from, 'Please enter the number.', m)
+                if (premium.includes(m.args[0])) return client.reply(m.from, 'User already premium', m)
+                await premium.push(m.args[0]);
+                await writeFileSync('./core/storage/json/premium.json', JSON.stringify(premium))
+                client.reply(m.from, 'Success add premium', m)
+            }
+                break
+            case 'delprem':
+            case 'delpremium':
+            case 'removeprem': {
+                if (!isOwner) return client.reply(m.from, mess.owner, m);
+                if (!m.text) return client.reply(m.from, 'Please enter the number.', m)
+                if (!premium.includes(m.args[0])) return client.reply(m.from, 'User not premium', m)
+                await premium.splice(premium.indexOf(m.args[0]), 1);
+                await writeFileSync('./core/storage/json/premium.json', JSON.stringify(premium))
+                client.reply(m.from, 'Success delete premium', m)
+            }
+                break
+            case 'listprem':
+            case 'listpremium': {
+                if (!isOwner) return client.reply(m.from, mess.owner, m);
+                let list = 1
+                let txt = `*List Premium Members*\n\n`
+                for (let user of premium) {
+                    txt += `${list++}. ${user.replace(/@.+/, '')}\n`
+                }
+                await client.reply(m.from, txt, m)
+            }
+                break
             default:
                 if (['>', 'eval', '=>'].some(a => m.command.toLowerCase().startsWith(a)) && isOwner) {
                     let evalCmd = '';

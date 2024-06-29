@@ -10,9 +10,21 @@
 import axios from "axios";
 import FormData from "form-data";
 import mimes from "mime-types";
+import jimp from "jimp";
 import { fileTypeFromBuffer } from "file-type";
 import { sizeFormatter } from 'human-readable';
 import { toBuffer } from "@xyzendev/baileys";
+
+export async function generateProfilePicture(media) {
+    const image = await jimp.read(media);
+    const min = image.getWidth();
+    const max = image.getHeight();
+    const cropped = image.crop(0, 0, min, max);
+    return {
+        img: await cropped.scaleToFit(720, 720).getBufferAsync(jimp.MIME_JPEG),
+        preview: await cropped.normalize().getBufferAsync(jimp.MIME_JPEG)
+    };
+}
 
 export function makeid(length) {
     let result = "";

@@ -13,7 +13,6 @@ export default {
     write_store: false,
     pairing_code: true,
     self: false,
-    groupOnly: true,
     packName: 'ZaydenBot',
     packPublish: "Powered By Adriansyah",
 }

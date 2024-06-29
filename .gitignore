@@ -71,3 +71,4 @@ assets/emojis/*
 session
 test
 backup
+./package-lock.json
