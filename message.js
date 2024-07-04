@@ -14,7 +14,7 @@ import * as Func from "./core/systems/functions.js"
 import os from "os"
 import util from "util"
 import chalk from "chalk"
-import { readFileSync, unwatchFile, watchFile, writeFileSync } from "fs";
+import { read, readFileSync, unwatchFile, watchFile, writeFileSync } from "fs";
 import axios from 'axios';
 import { fileURLToPath } from "url";
 import { exec } from "child_process";
@@ -50,10 +50,6 @@ export default async function message(client, store, m, chatUpdate) {
         }
 
         if (m.isBot) return;
-
-        if (config.settings.self) {
-            if (!m.key.fromMe || isOwner) return;
-        }
 
         if (m.message && !m.isBot) {
             if (!isUsers) {
@@ -92,25 +88,41 @@ export default async function message(client, store, m, chatUpdate) {
                 });
 
                 await client.sendMessage(m.from, {
-                    text: txt,
+                    document: readFileSync("./LICENSE"),
+                    fileName: 'Zayden AI',
+                    fileLength: await new Date(),
+                    pageCount: await new Date().getFullYear(),
+                    caption: txt,
+                    mimetype: 'image/png',
+                    jpegThumbnail: await client.resize('https://telegra.ph/file/d240be21a98f41a3bbc8c.jpg', 400, 400),
                     contextInfo: {
-                        forwardingScore: 999,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: "120363302746044690@newsletter",
-                            newsletterName: "Powered By Adrian",
-                        },
                         externalAdReply: {
-                            title: `Hello ${m.pushName} 👋🏻`,
-                            body: "Powered By Adrian",
-                            thumbnail: readFileSync("./core/storage/image/image-1.png"),
-                            sourceUrl: "https://github.com/xyzencode/ZaydenBot",
-                            showAdAttribution: true,
+                            title: 'Zayden AI',
+                            body: 'Powered By Zayden',
+                            thumbnail: readFileSync('./core/storage/image/image-1.png'),
+                            sourceUrl: null,
+                            mediaType: 1,
                             renderLargerThumbnail: true,
-                            mediaType: 1
+                        },
+                        forwardingScore: 10,
+                        isForwarded: true,
+                        mentionedJid: [m.sender],
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363296201298751@newsletter',
+                            serverMessageId: 101,
+                            newsletterName: 'Zayden AI',
                         }
                     }
-                }, { quoted: m });
+                }, {
+                    quoted: {
+                        key: {
+                            participant: '0@s.whatsapp.net',
+                            remoteJid: "0@s.whatsapp.net"
+                        }, message: {
+                            conversation: 'Zayden AI Telah Terverifikasi Oleh WhatsApp'
+                        }
+                    }
+                });
             }
                 break
 
@@ -225,8 +237,12 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'ai':
             case 'openai': {
                 if (!m.text) return client.reply(m.from, mess.media.prompt, m);
-                const result = await GPT4(m.text);
-                client.reply(m.from, result, m)
+                await GPT(m.text).then((res) => {
+                    client.reply(m.from, res, m);
+                }).catch((err) => {
+                    console.error(err)
+                    client.reply(m.from, mess.error, m)
+                })
             }
                 break
             case "remini":
@@ -330,7 +346,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'ig': {
                 if (!m.text) return client.reply(m.from, mess.media.url, m)
                 if (!/instagram.com/.test(m.text)) return client.reply(m.from, 'Invalid URL', m)
-                const res = await igdl(m.text).catch(console.error)
+                const res = await igdl(m.text)
                 if (res.length === 0) return client.reply(m.from, 'Instagram Tidak Ditemukan', m)
                 for (let i = 0; i < res.length; i++) {
                     if (res[i].includes("https://scontent.cdninstagram.com")) {
@@ -355,7 +371,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                     }
                 }).catch((err) => {
                     console.log(err);
-                    client.reply(m.from, 'Nickname Tidak Ada', m)
+                    client.reply(m.from, mess.error, m)
                 });
             }
                 break
@@ -717,6 +733,12 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                     txt += `${list++}. ${user.replace(/@.+/, '')}\n`
                 }
                 await client.reply(m.from, txt, m)
+            }
+                break
+            case 'zayden': {
+                if (!quoted) return client.reply(m.from, 'Reply to the message.', m);
+                let data = await JSON.stringify(store.messages[m.from].array.find(v => v.key.id === quoted.key.id), null, 2)
+                await client.reply(m.from, data, m)
             }
                 break
             default:
