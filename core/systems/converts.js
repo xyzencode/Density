@@ -67,7 +67,6 @@ function toImage(buffer, ext) {
         '-vframes', '1'
     ], ext, 'jpg')
 }
-
 export {
     toAudio,
     toPTT,

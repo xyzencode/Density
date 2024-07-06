@@ -12,7 +12,6 @@ import { Boom } from "@hapi/boom";
 import treeKill from "./core/systems/tree-kill.js";
 import pino from "pino";
 import smsg, { Module } from "./core/systems/serialize.js";
-import message from "./message.js"
 import fs from "fs"
 import { exec } from "child_process";
 
@@ -210,7 +209,12 @@ const Connecting = async () => {
             await client.readMessages([m.key])
         }
 
-        await message(client, store, m, messages[0])
+        let isOwner = JSON.stringify(config.number.owner).includes(m.sender.replace(/\D+/g, "")) || false
+
+        if (config.settings.self === 'true' && !isOwner) return;
+
+        if (process.env.NODE_ENV === "development") await import("./message.js").then(m => m.default(client, store, m, messages[0]))
+        await ((await import(`./message.js?v=${new Date().getTime()}`)).default(client, store, m, messages[0]))
     });
 
     setInterval(async () => {

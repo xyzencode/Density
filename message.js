@@ -88,13 +88,13 @@ export default async function message(client, store, m, chatUpdate) {
                 });
 
                 await client.sendMessage(m.from, {
-                    document: readFileSync("./LICENSE"),
-                    fileName: 'Zayden AI',
-                    fileLength: await new Date(),
-                    pageCount: await new Date().getFullYear(),
+                    // document: readFileSync("./LICENSE"),
+                    // fileName: 'Zayden AI',
+                    // fileLength: await new Date(),
+                    // pageCount: await new Date().getFullYear(),
                     caption: txt,
-                    mimetype: 'image/png',
-                    jpegThumbnail: await client.resize('https://telegra.ph/file/d240be21a98f41a3bbc8c.jpg', 400, 400),
+                    // mimetype: 'image/png',
+                    // jpegThumbnail: await client.resize('https://telegra.ph/file/d240be21a98f41a3bbc8c.jpg', 400, 400),
                     contextInfo: {
                         externalAdReply: {
                             title: 'Zayden AI',
@@ -110,7 +110,7 @@ export default async function message(client, store, m, chatUpdate) {
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '120363296201298751@newsletter',
                             serverMessageId: 101,
-                            newsletterName: 'Zayden AI',
+                            newsletterName: 'Powered By Zayden',
                         }
                     }
                 }, {
@@ -202,7 +202,19 @@ ${cpus[0].model.trim()} (${cpu.speed} MHZ)\n${Object.keys(cpu.times).map(type =>
 _CPU Core(s) Usage (${cpus.length} Core CPU)_
 ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Object.keys(cpu.times).map(type => `- *${(type + '*').padEnd(6)}: ${(100 * cpu.times[type] / cpu.total).toFixed(2)}%`).join('\n')}`).join('\n\n')}` : ''}
 `.trim()
-                m.reply(respon)
+                client.sendMessage(m.from, {
+                    text: respon,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: "Information Server",
+                            body: 'Powered By Zayden',
+                            thumbnail: readFileSync('./core/storage/image/server.jpg'),
+                            showAdAttribution: true,
+                            renderLargerThumbnail: true,
+                            mediaType: 1
+                        }
+                    }
+                }, { quoted: m });
             }
                 break
 
@@ -250,6 +262,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case "hd":
             case "upscale": {
                 client.enhancer = client.enhancer ? client.enhancer : {};
+                if (Number(quoted.msg.fileLength.low) > 500000) return m.reply("The file is too large.")
                 if (m.sender in client.enhancer) return m.reply("Please wait, there is still something in process")
                 if (/image|webp/.test(quoted.msg.mimetype)) {
                     client.enhancer[m.sender] = true
@@ -346,22 +359,23 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'ig': {
                 if (!m.text) return client.reply(m.from, mess.media.url, m)
                 if (!/instagram.com/.test(m.text)) return client.reply(m.from, 'Invalid URL', m)
-                const res = await igdl(m.text)
-                if (res.length === 0) return client.reply(m.from, 'Instagram Tidak Ditemukan', m)
-                for (let i = 0; i < res.length; i++) {
-                    if (res[i].includes("https://scontent.cdninstagram.com")) {
-                        await client.sendImage(m.from, res[i], '', m)
-                    } else {
-                        await client.sendVideo(m.from, res[i], '', m)
+                await igdl(m.text).then(async (res) => {
+                    if (res.length === 0) return client.reply(m.from, 'Instagram Tidak Ditemukan', m)
+                    for (let i = 0; i < res.length; i++) {
+                        if (res[i].includes("https://scontent.cdninstagram.com")) {
+                            await client.sendImage(m.from, res[i], '', m)
+                        } else {
+                            await client.sendVideo(m.from, res[i], '', m)
+                        }
                     }
-                }
+                }).catch(() => client.reply(m.from, 'Instagram Tidak Ditemukan', m))
             }
                 break
             case 'igstory':
             case 'igstalker': {
                 if (!m.text) return client.reply(m.from, 'Send Nickname Instagram', m)
                 await dScrape.downloader.igStory('https://www.instagram.com/stories/' + m.text).then(async (res) => {
-                    if (res.length === 0) return client.reply(m.from, 'Nickname Tidak Ada', m)
+                    if (res.length === 0) return client.reply(m.from, 'Story Tidak Ditemukan Atau Username Tidak Valid', m)
                     for (let i = 0; i < res.length; i++) {
                         if (res[i].url.includes("https://scontent.cdninstagram.com")) {
                             await client.sendImage(m.from, res[i].url, '', m)
@@ -408,9 +422,10 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'tt': {
                 if (!m.text) return client.reply(m.from, mess.media.url, m);
                 if (!m.text.includes('tiktok.com')) return client.reply(m.from, 'Invalid Tiktok URL', m)
-                const res = await tiktokdl(m.text)
-                if (res.status === false) return client.reply(m.from, 'Video Not Found', m);
-                await client.sendMessage(m.from, { video: { url: res.server1.url }, caption: res.caption }, { quoted: m });
+                await tiktokdl(m.text).then(async (res) => {
+                    if (res.status === false) return client.reply(m.from, 'Video Not Found', m);
+                    await client.sendMessage(m.from, { video: { url: res.server1.url }, caption: res.caption }, { quoted: m });
+                }).catch(() => client.reply(m.from, 'Video Not Found', m));
             }
                 break;
 
@@ -458,7 +473,18 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 if (!m.text) return client.reply(m.from, mess.media.prompt, m)
                 let res = await search(m.text)
                 if (res.length === 0) return client.reply(m.from, mess.notfound, m)
-                client.sendList(m.from, "Result", "Powered By Adrian", { title: 'Click Me :)', sections: [{ title: "Hasil Pencarian", highlight_label: "Best Result", rows: res.map(a => ({ title: a.title.toUpperCase(), decoreion: a.decoreion.toUpperCase(), id: `.ytdl ${a.url}` })) }] })
+                client.sendList(m.from, "Result", "Powered By Adrian", {
+                    title: 'Click Me :)',
+                    sections: [{
+                        title: "Hasil Pencarian",
+                        highlight_label: "Best Result",
+                        rows: res.map(a => ({
+                            title: a.title.toUpperCase(),
+                            description: a.description.toUpperCase(),
+                            id: `.ytdl ${a.url}`
+                        }))
+                    }]
+                })
             }
                 break
 
@@ -467,8 +493,8 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case "youtube": {
                 if (!m.text) return client.reply(m.from, mess.media.url, m)
                 let img = (await ytdl.getInfo(m.text)).videoDetails.thumbnails[4].url
-                const { title, decoreion } = (await ytdl.getBasicInfo(m.text)).videoDetails
-                const text = `*${title.toUpperCase()}*\n\n${decoreion}`
+                const { title, description } = (await ytdl.getBasicInfo(m.text)).videoDetails
+                const text = `*${title.toUpperCase()}*\n\n${description}`
                 client.sendListWithImage(m.from, text, "Powered By Adrian", { title: 'Click Me :)', sections: [{ title: "Pilih Format", rows: [{ title: "MP3", decoreion: "Download lagu dalam format MP3", id: `.ytmp3 ${m.text}` }, { title: "MP4", decoreion: "Download video dalam format MP4", id: `.ytmp4 ${m.text}` }] }] }, img, { contextInfo: { mentionedJid: [m.sender], isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363182916458068@newsletter", newsletterName: 'Powered By Adrian', serverMessageId: -1 }, } })
             }
                 break
@@ -560,18 +586,6 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 await m.reply({ forward: quoted, force: true })
             }
                 break
-            case "quoted":
-            case "q": {
-                if (!m.isQuoted) return m.reply("Reply to the message you want to quote.")
-                try {
-                    var message = await smsg(client, (await store.loadMessage(m.from, m.quoted.id)), store)
-                    if (!message.isQuoted) return m.reply("Quoted message does not exist")
-                    await m.reply({ forward: message.quoted, force: true })
-                } catch (e) {
-                    m.reply("Message not found")
-                }
-            }
-                break
             case "delete":
             case "del": {
                 if (quoted.fromMe) {
@@ -612,6 +626,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 break
             case 's':
             case 'sticker':
+            case 'swm':
             case 'imgtosticker': {
                 if (!quoted.isMedia) return client.reply(m.from, mess.media.image, m)
                 let media = await Downloaded();
@@ -678,7 +693,8 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
             case 'setpp': {
                 if (!isOwner) return client.reply(m.from, mess.owner, m);
                 if (!quoted.isMedia) return client.reply(m.from, mess.media.image, m)
-                let media = await Downloaded();
+                let a = await Downloaded();
+                let media = await writeFileSync(`./temp/${new Date().getTime()}.png`, a)
                 if (m.args[0] === 'full') {
                     var { img } = await Func.generateProfilePicture(media)
                     await client.query({
@@ -737,8 +753,7 @@ ${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Obje
                 break
             case 'zayden': {
                 if (!quoted) return client.reply(m.from, 'Reply to the message.', m);
-                let data = await JSON.stringify(store.messages[m.from].array.find(v => v.key.id === quoted.key.id), null, 2)
-                await client.reply(m.from, data, m)
+                await client.reply(m.from, JSON.stringify(store.messages[m.from].array.find(v => v.key.id === quoted.key.id), null, 2), m)
             }
                 break
             default:

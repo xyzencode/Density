@@ -25,5 +25,8 @@
     "performance-now": "^2.1.0",
     "qrcode-terminal": "^0.12.0",
     "spotifydl-x": "^0.3.5"
+  },
+  "devDependencies": {
+    "@firebase/app": "^0.10.6"
   }
 }
